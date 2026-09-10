@@ -23,6 +23,19 @@ final class SleeperDecodingTests: XCTestCase {
         let rollover = try decoder.decode(SleeperState.self, from: Data(#"{"week":2,"display_week":3,"season":"2026","season_type":"regular"}"#.utf8))
         XCTAssertEqual(rollover.currentWeek, 3, "display_week wins when it differs from week")
         XCTAssertEqual(rollover.currentLeagueSeason, "2026", "Falls back to season when league_season is absent")
+
+        let offseason = try decoder.decode(SleeperState.self, from: Data(#"{"week":0,"season":"2026","season_type":"off"}"#.utf8))
+        XCTAssertEqual(offseason.currentWeek, 1, "Week is clamped to at least 1")
+        XCTAssertFalse(offseason.isRegularOrPostseason)
+    }
+
+    func testDecodesRosterCoOwners() throws {
+        let json = #"[{"roster_id":1,"owner_id":"u1","co_owners":["u9"],"league_id":"L1","settings":{"wins":1,"losses":0}}]"#
+        let rosters = try decoder.decode([SleeperRoster].self, from: Data(json.utf8))
+        XCTAssertEqual(rosters.first?.coOwners, ["u9"])
+        XCTAssertTrue(rosters.first?.isManaged(by: "u9") ?? false)
+        XCTAssertTrue(rosters.first?.isManaged(by: "u1") ?? false)
+        XCTAssertFalse(rosters.first?.isManaged(by: "u2") ?? true)
     }
 
     func testDecodesMatchupWithNullsAndIntegers() throws {

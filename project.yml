@@ -112,6 +112,10 @@ targets:
       - path: SleeperWidgetTests
     dependencies:
       - target: SleeperWidget
+    # GENERATE_INFOPLIST_FILE is off project-wide, so the test bundle needs its own plist.
+    info:
+      path: SleeperWidgetTests/Info.plist
+      properties: {}
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.sleeperwidget.app.tests

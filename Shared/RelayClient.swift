@@ -1,5 +1,18 @@
 import Foundation
 
+enum RelayClientError: LocalizedError {
+    case httpStatus(Int)
+
+    var errorDescription: String? {
+        switch self {
+        case .httpStatus(let code):
+            return code == 401 || code == 403
+                ? "Relay rejected the token (HTTP \(code))."
+                : "Relay returned HTTP \(code)."
+        }
+    }
+}
+
 /// Registers Live Activity push tokens with the optional relay server in `server/`,
 /// which then starts and updates the activity via APNs even when the app is closed.
 struct RelayClient: Sendable {
@@ -20,6 +33,8 @@ struct RelayClient: Sendable {
         /// True when the user pinned the activity by hand; the relay then keeps it
         /// alive between game windows instead of ending it.
         var startedManually: Bool
+        /// ISO 8601 time until which the relay must not push-to-start (the user tapped Stop).
+        var suppressAutoStartUntil: String?
     }
 
     let baseURL: URL
@@ -46,7 +61,7 @@ struct RelayClient: Sendable {
         authorize(&request)
         let (_, response) = try await session.data(for: request)
         if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
-            throw SleeperAPIError.httpStatus(http.statusCode)
+            throw RelayClientError.httpStatus(http.statusCode)
         }
     }
 
@@ -79,13 +94,31 @@ struct RelayClient: Sendable {
         return fresh
     }
 
-    /// Best guess at the APNs environment this build uses.
-    static var apnsEnvironment: String {
+    /// The APNs environment this build's tokens belong to. Read from the signed
+    /// provisioning profile (`aps-environment`), since a Release build run from Xcode
+    /// still uses the sandbox; falls back to the build configuration on the simulator.
+    static let apnsEnvironment: String = {
+        if let fromProfile = provisioningProfileAPSEnvironment() { return fromProfile }
         #if DEBUG
         return "development"
         #else
         return "production"
         #endif
+    }()
+
+    private static func provisioningProfileAPSEnvironment() -> String? {
+        guard let url = Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision"),
+              let raw = try? Data(contentsOf: url),
+              let start = raw.range(of: Data("<?xml".utf8)),
+              let end = raw.range(of: Data("</plist>".utf8), in: start.upperBound..<raw.endIndex)
+        else { return nil }
+        let plistData = raw.subdata(in: start.lowerBound..<end.upperBound)
+        guard let plist = try? PropertyListSerialization.propertyList(from: plistData, format: nil) as? [String: Any],
+              let entitlements = plist["Entitlements"] as? [String: Any],
+              let environment = entitlements["aps-environment"] as? String,
+              environment == "development" || environment == "production"
+        else { return nil }
+        return environment
     }
 }
 

@@ -20,6 +20,7 @@ import path from 'node:path';
  * @property {'development' | 'production'} environment
  * @property {string | null} timeZone
  * @property {boolean} startedManually the user started the activity by hand; only `final` ends it
+ * @property {string | null} suppressAutoStartUntil ISO time; no push-to-start before it (the user tapped Stop)
  * @property {string | null} lastContentStateHash hash of the last content-state pushed to `activityToken`
  * @property {string | null} lastPushAt ISO time of the last update pushed to `activityToken`
  * @property {string | null} lastStartPushAt ISO time of the last push-to-start
@@ -29,7 +30,7 @@ import path from 'node:path';
  * @property {string} updatedAt ISO time of the last change to this row
  */
 
-const CLIENT_FIELDS = ['installId', 'userId', 'leagueId', 'pushToStartToken', 'activityToken', 'activityId', 'environment', 'timeZone'];
+const CLIENT_FIELDS = ['installId', 'userId', 'leagueId', 'pushToStartToken', 'activityToken', 'activityId', 'environment', 'timeZone', 'suppressAutoStartUntil'];
 const FLAG_FIELDS = ['startedManually'];
 const BOOKKEEPING_FIELDS = ['lastContentStateHash', 'lastPushAt', 'lastStartPushAt', 'lastStartKey', 'lastPhase', 'lastMargin'];
 

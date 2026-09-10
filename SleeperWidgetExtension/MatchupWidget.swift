@@ -309,7 +309,8 @@ private struct EmptyMatchupView: View {
     let family: WidgetFamily
 
     private var message: String {
-        isConfigured ? "Open the app to load your matchup" : "Open the app to sign in to Sleeper"
+        if isConfigured { return "Open the app to load your matchup" }
+        return SharedStore.userId == nil ? "Open the app to sign in to Sleeper" : "Open the app to choose a league"
     }
 
     var body: some View {

@@ -142,7 +142,13 @@ xcodebuild test -scheme SleeperWidget -destination 'platform=iOS Simulator,name=
 
 See [`server/README.md`](server/README.md). In short: create an APNs auth key, set four
 environment variables, run `npm start`, then paste the relay URL (and the bearer token, if
-you started the relay with `RELAY_AUTH_TOKEN`) into the app's Settings. The app sends the
+you started the relay with `RELAY_AUTH_TOKEN`) into the app's Settings.
+
+Once the relay has accepted a registration, the app runs in **relay-first mode**: it
+schedules no background refreshes of its own, because the relay already polls Sleeper and
+pushes every change. If the relay stops accepting registrations for a day, background
+refresh resumes on its own. Tapping **Stop** in the app also tells the relay not to
+push-to-start again until the current game window is over. The app sends the
 relay its push-to-start token and, once an activity is running, that activity's update
 token, plus whether you pinned the activity by hand so the relay knows not to end it
 between game windows.

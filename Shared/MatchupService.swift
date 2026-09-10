@@ -58,7 +58,7 @@ enum MatchupBuilder {
         matchups: [SleeperMatchup],
         now: Date = Date()
     ) throws -> MatchupSnapshot {
-        guard let myRoster = rosters.first(where: { $0.ownerId == userId }) else {
+        guard let myRoster = rosters.first(where: { $0.isManaged(by: userId) }) else {
             throw MatchupServiceError.noRosterForUser
         }
         let usersById = Dictionary(users.map { ($0.userId, $0) }, uniquingKeysWith: { first, _ in first })
@@ -75,9 +75,8 @@ enum MatchupBuilder {
             opponent = team(roster: theirRoster, matchup: theirs, usersById: usersById)
         }
 
-        let phase: MatchupPhase = opponent == nil
-            ? .pregame
-            : GameWindow.phase(myPoints: me.points, opponentPoints: opponent?.points ?? 0, at: now)
+        // On a bye the phase still follows the week so "Final" appears once games end.
+        let phase = GameWindow.phase(myPoints: me.points, opponentPoints: opponent?.points ?? 0, at: now)
 
         return MatchupSnapshot(
             leagueId: league.leagueId,

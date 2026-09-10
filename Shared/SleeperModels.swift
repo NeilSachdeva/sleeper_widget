@@ -85,14 +85,22 @@ struct SleeperRoster: Codable, Hashable {
     // `starters`, and `reserve`, but decoding them buys nothing here.
     let rosterId: Int
     let ownerId: String?
+    /// Additional managers of the roster; a co-owner should see this team as theirs.
+    let coOwners: [String]?
     let leagueId: String?
     let settings: Settings?
 
     enum CodingKeys: String, CodingKey {
         case rosterId = "roster_id"
         case ownerId = "owner_id"
+        case coOwners = "co_owners"
         case leagueId = "league_id"
         case settings
+    }
+
+    /// True when `userId` owns or co-owns this roster.
+    func isManaged(by userId: String) -> Bool {
+        ownerId == userId || (coOwners ?? []).contains(userId)
     }
 }
 

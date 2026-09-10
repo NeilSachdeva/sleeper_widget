@@ -84,15 +84,17 @@ private struct ScoreboardCard: View {
 
             HStack(alignment: .top, spacing: 12) {
                 TeamColumn(team: snapshot.me, leading: snapshot.margin >= 0)
-                VStack(spacing: 4) {
-                    Text("VS")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(.tertiary)
-                    Text(snapshot.marginText)
-                        .font(.headline.monospacedDigit())
-                        .foregroundStyle(marginColor)
+                if !snapshot.isBye {
+                    VStack(spacing: 4) {
+                        Text("VS")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.tertiary)
+                        Text(snapshot.marginText)
+                            .font(.headline.monospacedDigit())
+                            .foregroundStyle(marginColor)
+                    }
+                    .padding(.top, 36)
                 }
-                .padding(.top, 36)
                 if let opponent = snapshot.opponent {
                     TeamColumn(team: opponent, leading: snapshot.margin < 0)
                 } else {
@@ -211,7 +213,8 @@ private struct LiveActivityCard: View {
                         Label("Show on Lock Screen", systemImage: "lock.iphone")
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(snapshot.isBye || !model.liveActivity.areActivitiesEnabled)
+                    // Final weeks have nothing left to track; the next refresh would end it anyway.
+                    .disabled(snapshot.isBye || snapshot.phase == .final || !model.liveActivity.areActivitiesEnabled)
                 }
                 Spacer()
             }
@@ -227,14 +230,20 @@ private struct LiveActivityCard: View {
         if snapshot.isBye {
             return "You're on a bye this week, so there's nothing to track."
         }
+        let autoStart = SharedStore.autoStartLiveActivity
         if let window {
-            return "\(window.label) games are on. The Live Activity starts automatically when you open the app during games."
+            return autoStart
+                ? "\(window.label) games are on. The Live Activity starts automatically when you open the app during games."
+                : "\(window.label) games are on. Auto-start is off in Settings, so pin the matchup here when you want it."
         }
         if let nextWindow {
             let formatter = DateFormatter()
             formatter.timeZone = .current
             formatter.dateFormat = "EEE h:mm a"
-            return "Next games: \(nextWindow.label), \(formatter.string(from: nextWindow.start)). You can pin the matchup now, or it will appear automatically when you open the app during games."
+            let tail = autoStart
+                ? "You can pin the matchup now, or it will appear automatically when you open the app during games."
+                : "You can pin the matchup now; auto-start is off in Settings."
+            return "Next games: \(nextWindow.label), \(formatter.string(from: nextWindow.start)). \(tail)"
         }
         return "Pin your matchup to the Lock Screen any time."
     }

@@ -99,6 +99,20 @@ export function weekAnchor(date) {
 }
 
 /**
+ * Thanksgiving (fourth Thursday of November, games from 12:30 ET) and Christmas Day
+ * when it lands on a Wednesday or Thursday (afternoon games). Both are fixed NFL slots.
+ * Mirrors `GameWindow.holidayLabel(for:)`.
+ * @param {Date} date
+ * @returns {string | null} the window label, or null for an ordinary day
+ */
+export function holidayLabel(date) {
+  const p = easternParts(date);
+  if (p.month === 11 && p.weekday === 4 && p.day >= 22 && p.day <= 28) return 'Thanksgiving';
+  if (p.month === 12 && p.day === 25 && (p.weekday === 3 || p.weekday === 4)) return 'Christmas';
+  return null;
+}
+
+/**
  * Game windows for the fantasy week containing `date`, in chronological order.
  * Saturday games only appear late in the season (weeks 15+).
  * @param {Date} date
@@ -110,7 +124,12 @@ export function windows(date, week) {
   const at = (dayOffset, hour, minute) =>
     easternDate(tuesday.year, tuesday.month, tuesday.day + dayOffset, hour, minute);
 
-  const list = [{ start: at(2, 19, 30), end: at(3, 0, 45), label: 'Thursday Night' }];
+  const list = [];
+  const wednesdayHoliday = holidayLabel(at(1, 12, 0)); // Christmas on a Wednesday
+  if (wednesdayHoliday) list.push({ start: at(1, 12, 0), end: at(2, 0, 45), label: wednesdayHoliday });
+  const thursdayHoliday = holidayLabel(at(2, 12, 0)); // Thanksgiving, or Christmas on a Thursday
+  if (thursdayHoliday) list.push({ start: at(2, 12, 0), end: at(3, 0, 45), label: thursdayHoliday });
+  else list.push({ start: at(2, 19, 30), end: at(3, 0, 45), label: 'Thursday Night' });
   if (week >= 15) {
     list.push({ start: at(4, 12, 30), end: at(5, 0, 45), label: 'Saturday' });
   }
@@ -153,14 +172,15 @@ export function nextWindow(date, week) {
 }
 
 /**
- * True from Thursday kickoff through the end of Monday night (Tuesday 02:00 ET),
- * i.e. while the week's scores can still change.
+ * True from the week's first kickoff through the end of Monday night (Tuesday
+ * 02:00 ET), i.e. while the week's scores can still change.
  * @param {Date} date
  * @returns {boolean}
  */
 export function isLiveSpan(date) {
   const tuesday = easternParts(weekAnchor(date));
-  const spanStart = easternDate(tuesday.year, tuesday.month, tuesday.day + 2, 19, 30);
+  // The week number only adds the Saturday window, which is never first.
+  const spanStart = windows(date, 1)[0].start;
   const spanEnd = easternDate(tuesday.year, tuesday.month, tuesday.day + 7, 2, 0);
   return date >= spanStart && date < spanEnd;
 }
@@ -173,7 +193,8 @@ export function isLiveSpan(date) {
  * @returns {'pregame' | 'live' | 'final'}
  */
 export function phase(myPoints, opponentPoints, date) {
-  const anyPoints = myPoints > 0 || opponentPoints > 0;
+  // Negative totals are possible (a kicker's miss, a defence giving up points).
+  const anyPoints = myPoints !== 0 || opponentPoints !== 0;
   if (isLiveSpan(date)) return 'live';
   return anyPoints ? 'final' : 'pregame';
 }

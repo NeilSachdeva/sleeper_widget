@@ -36,6 +36,17 @@ enum GameWindow {
         return anchor
     }
 
+    /// Thanksgiving (fourth Thursday of November, games from 12:30 ET) and Christmas Day
+    /// when it lands on a Wednesday or Thursday (afternoon games). Both are fixed NFL slots.
+    /// Returns the label to use for that day's window, or nil for an ordinary day.
+    static func holidayLabel(for date: Date) -> String? {
+        let parts = calendar.dateComponents([.month, .day, .weekday], from: date)
+        guard let month = parts.month, let day = parts.day, let weekday = parts.weekday else { return nil }
+        if month == 11, weekday == 5, (22...28).contains(day) { return "Thanksgiving" }
+        if month == 12, day == 25, weekday == 4 || weekday == 5 { return "Christmas" }
+        return nil
+    }
+
     /// Game windows for the fantasy week containing `date`, in chronological order.
     /// Saturday games only appear late in the season (weeks 15+).
     static func windows(for date: Date, week: Int) -> [Window] {
@@ -50,9 +61,15 @@ enum GameWindow {
             cal.date(bySettingHour: hour, minute: minute, second: 0, of: day) ?? day
         }
 
-        var windows: [Window] = [
-            Window(start: at(day(2), 19, 30), end: at(day(3), 0, 45), label: "Thursday Night"),
-        ]
+        var windows: [Window] = []
+        if let holiday = holidayLabel(for: day(1)) { // Christmas on a Wednesday
+            windows.append(Window(start: at(day(1), 12, 0), end: at(day(2), 0, 45), label: holiday))
+        }
+        if let holiday = holidayLabel(for: day(2)) { // Thanksgiving, or Christmas on a Thursday
+            windows.append(Window(start: at(day(2), 12, 0), end: at(day(3), 0, 45), label: holiday))
+        } else {
+            windows.append(Window(start: at(day(2), 19, 30), end: at(day(3), 0, 45), label: "Thursday Night"))
+        }
         if week >= 15 {
             windows.append(Window(start: at(day(4), 12, 30), end: at(day(5), 0, 45), label: "Saturday"))
         }
@@ -75,14 +92,14 @@ enum GameWindow {
         return windows(for: nextWeek, week: week + 1).first { $0.start > date }
     }
 
-    /// True from Thursday kickoff through the end of Monday night (Tuesday 02:00 ET),
-    /// i.e. while the week's scores can still change.
+    /// True from the week's first kickoff through the end of Monday night (Tuesday
+    /// 02:00 ET), i.e. while the week's scores can still change.
     static func isLiveSpan(at date: Date = Date()) -> Bool {
         let cal = calendar
         let tuesday = cal.startOfDay(for: weekAnchor(for: date))
-        guard let thursday = cal.date(byAdding: .day, value: 2, to: tuesday),
+        // The week number only adds the Saturday window, which is never first.
+        guard let spanStart = windows(for: date, week: 1).first?.start,
               let nextTuesday = cal.date(byAdding: .day, value: 7, to: tuesday),
-              let spanStart = cal.date(bySettingHour: 19, minute: 30, second: 0, of: thursday),
               let spanEnd = cal.date(bySettingHour: 2, minute: 0, second: 0, of: nextTuesday)
         else { return false }
         return date >= spanStart && date < spanEnd
@@ -90,7 +107,8 @@ enum GameWindow {
 
     /// Derives the matchup phase from scores and the time of week.
     static func phase(myPoints: Double, opponentPoints: Double, at date: Date = Date()) -> MatchupPhase {
-        let anyPoints = myPoints > 0 || opponentPoints > 0
+        // Negative totals are possible (a kicker's miss, a defence giving up points).
+        let anyPoints = myPoints != 0 || opponentPoints != 0
         if isLiveSpan(at: date) {
             return .live
         }

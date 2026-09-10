@@ -28,10 +28,11 @@ test('head-to-head matchup', () => {
   assert.equal(margin(snapshot).toFixed(2), '13.32');
 });
 
-test('bye week has no opponent and is pregame even inside the live span', () => {
+test('bye week has no opponent; its phase still follows the week', () => {
   const snapshot = build({ matchups: byeMatchups });
   assert.equal(snapshot.opponent, null);
-  assert.equal(snapshot.phase, 'pregame');
+  assert.equal(snapshot.phase, 'live', 'inside the live span');
+  assert.equal(build({ matchups: byeMatchups, now: new Date('2026-09-23T16:00:00Z') }).phase, 'pregame', 'midweek with no points');
   assert.equal(snapshot.me.points, 0);
   assert.equal(margin(snapshot), 0);
 });
@@ -93,7 +94,7 @@ test('toContentState omits unknown records and uses 0 for a bye', () => {
   const bye = toContentState(build({ matchups: byeMatchups }));
   assert.equal('opponentRecord' in bye, false);
   assert.equal(bye.opponentPoints, 0);
-  assert.equal(bye.phase, 'pregame');
+  assert.equal(bye.phase, 'live', 'a bye follows the week phase');
 });
 
 test('toAttributes matches MatchupActivityAttributes', () => {
@@ -109,4 +110,11 @@ test('toAttributes matches MatchupActivityAttributes', () => {
   const bye = toAttributes(build({ matchups: byeMatchups }));
   assert.equal(bye.opponentTeamName, 'Bye week');
   assert.equal('opponentAvatarId' in bye, false);
+});
+
+test('a co-owner sees the roster as theirs', () => {
+  const coOwned = rosters.map((r) => (r.roster_id === 1 ? { ...r, co_owners: ['u9'] } : r));
+  const snapshot = buildSnapshot({ userId: 'u9', league, week: 2, rosters: coOwned, users, matchups, now: new Date('2026-09-20T20:00:00Z') });
+  assert.equal(snapshot.me.rosterId, 1);
+  assert.equal(snapshot.me.name, 'Gridiron Gurus');
 });

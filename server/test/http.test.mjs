@@ -41,12 +41,21 @@ test('validateRegistration', () => {
       pushToStartToken: 'ab12',
       activityToken: null,
       startedManually: false,
+      suppressAutoStartUntil: null,
     },
   });
   assert.equal(validateRegistration({ ...body, startedManually: true }, 'INSTALL-1').registration.startedManually, true);
   assert.equal(validateRegistration({ ...body, startedManually: false }, 'INSTALL-1').registration.startedManually, false);
   assert.equal(validateRegistration({ ...body, startedManually: null }, 'INSTALL-1').registration.startedManually, false, 'null → false');
   assert.deepEqual(validateRegistration({ ...body, startedManually: 'yes' }, 'INSTALL-1'), { error: 'startedManually must be a boolean' });
+  assert.equal(validateRegistration(body, 'INSTALL-1').registration.suppressAutoStartUntil, null, 'absent → null');
+  assert.equal(
+    validateRegistration({ ...body, suppressAutoStartUntil: '2026-09-20T23:45:00Z' }, 'INSTALL-1').registration.suppressAutoStartUntil,
+    '2026-09-20T23:45:00Z',
+  );
+  assert.deepEqual(validateRegistration({ ...body, suppressAutoStartUntil: 'soon' }, 'INSTALL-1'), {
+    error: 'suppressAutoStartUntil must be an ISO 8601 date',
+  });
   assert.deepEqual(validateRegistration(body, 'other'), { error: 'installId in body does not match the URL' });
   assert.deepEqual(validateRegistration({ ...body, userId: '' }, 'INSTALL-1'), { error: 'userId is required' });
   assert.deepEqual(validateRegistration({ ...body, leagueId: undefined }, 'INSTALL-1'), { error: 'leagueId is required' });

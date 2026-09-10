@@ -7,9 +7,9 @@ final class MatchupBuilderTests: XCTestCase {
         totalRosters: 4, avatar: nil, settings: nil
     )
 
-    private func roster(_ id: Int, owner: String, wins: Int = 0, losses: Int = 0) -> SleeperRoster {
+    private func roster(_ id: Int, owner: String, coOwners: [String]? = nil, wins: Int = 0, losses: Int = 0) -> SleeperRoster {
         SleeperRoster(
-            rosterId: id, ownerId: owner, leagueId: "L1",
+            rosterId: id, ownerId: owner, coOwners: coOwners, leagueId: "L1",
             settings: SleeperRoster.Settings(
                 wins: wins, losses: losses, ties: nil, fpts: nil, fptsDecimal: nil,
                 fptsAgainst: nil, fptsAgainstDecimal: nil
@@ -79,7 +79,59 @@ final class MatchupBuilderTests: XCTestCase {
         )
         XCTAssertTrue(snapshot.isBye)
         XCTAssertNil(snapshot.opponent)
-        XCTAssertEqual(snapshot.phase, .pregame)
+        XCTAssertEqual(snapshot.phase, .live, "A bye still follows the week's phase")
+        XCTAssertEqual(snapshot.marginText, "Tied")
+
+        let midweek = try MatchupBuilder.build(
+            userId: "me", league: league, week: 9,
+            rosters: [roster(1, owner: "me")], users: [],
+            matchups: [matchup(1, matchupId: nil, points: 0)],
+            now: wednesdayNoon
+        )
+        XCTAssertEqual(midweek.phase, .pregame)
+    }
+
+    func testCoOwnerIsMatchedToTheirRoster() throws {
+        let snapshot = try MatchupBuilder.build(
+            userId: "partner",
+            league: league,
+            week: 2,
+            rosters: [roster(1, owner: "me", coOwners: ["partner"]), roster(2, owner: "them")],
+            users: [user("me", name: "Neil", team: "Gridiron Gurus"), user("them", name: "Sam", team: nil)],
+            matchups: [matchup(1, matchupId: 1, points: 50), matchup(2, matchupId: 1, points: 40)],
+            now: sundayAfternoon
+        )
+        XCTAssertEqual(snapshot.me.rosterId, 1)
+        XCTAssertEqual(snapshot.me.name, "Gridiron Gurus")
+        XCTAssertEqual(snapshot.opponent?.rosterId, 2)
+    }
+
+    func testNegativeScoringWeekIsFinalAfterGames() throws {
+        let snapshot = try MatchupBuilder.build(
+            userId: "me", league: league, week: 2,
+            rosters: [roster(1, owner: "me"), roster(2, owner: "them")], users: [],
+            matchups: [matchup(1, matchupId: 1, points: -1.5), matchup(2, matchupId: 1, points: 0)],
+            now: wednesdayNoon
+        )
+        XCTAssertEqual(snapshot.phase, .final)
+        XCTAssertEqual(snapshot.marginText, "−1.5")
+    }
+
+    func testSubCentDifferenceIsATie() {
+        let snapshot = MatchupSnapshot(
+            leagueId: "L1", leagueName: "Test", season: "2026", week: 2,
+            me: .init(rosterId: 1, name: "A", ownerName: nil, avatarId: nil, points: 104.30000000000001, record: nil),
+            opponent: .init(rosterId: 2, name: "B", ownerName: nil, avatarId: nil, points: 104.3, record: nil),
+            phase: .live, updatedAt: sundayAfternoon
+        )
+        XCTAssertTrue(snapshot.isTied)
+        XCTAssertFalse(snapshot.isWinning)
+        XCTAssertEqual(snapshot.marginText, "Tied")
+        XCTAssertEqual(snapshot.activityContentState.marginText, "Tied")
+        XCTAssertEqual(ScoreFormat.points(-0.001), "0", "No -0")
+        XCTAssertEqual(ScoreFormat.marginText(-0.004), "Tied")
+        XCTAssertEqual(ScoreFormat.marginText(12.4), "+12.4")
+        XCTAssertEqual(ScoreFormat.marginText(-3.2), "−3.2")
     }
 
     func testMissingRosterThrows() {

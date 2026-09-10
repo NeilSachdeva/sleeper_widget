@@ -34,7 +34,9 @@ struct SleeperAPI: Sendable {
     func user(_ usernameOrId: String) async throws -> SleeperUser {
         let trimmed = usernameOrId.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { throw SleeperAPIError.notFound }
-        return try await get(path: "user/\(trimmed)")
+        // Display names with spaces or symbols are common input; encode rather than fail.
+        let encoded = trimmed.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? trimmed
+        return try await get(path: "user/\(encoded)")
     }
 
     /// `GET /v1/user/<user_id>/leagues/<sport>/<season>`

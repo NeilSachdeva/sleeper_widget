@@ -17,13 +17,11 @@ struct MatchupActivityAttributes: ActivityAttributes {
         var updatedAtUnix: Double
 
         var updatedAt: Date { Date(timeIntervalSince1970: updatedAtUnix) }
-        var margin: Double { myPoints - opponentPoints }
+        /// Rounded to the cent, like the displayed scores, so near-equal totals read as a tie.
+        var margin: Double { ScoreFormat.cents(myPoints - opponentPoints) }
         var isWinning: Bool { margin > 0 }
         var isTied: Bool { margin == 0 }
-        var marginText: String {
-            if isTied { return "Tied" }
-            return (margin > 0 ? "+" : "−") + ScoreFormat.points(abs(margin))
-        }
+        var marginText: String { ScoreFormat.marginText(margin) }
     }
 
     var leagueId: String

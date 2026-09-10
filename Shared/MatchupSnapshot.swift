@@ -42,23 +42,34 @@ struct MatchupSnapshot: Codable, Hashable, Sendable {
 
     var isBye: Bool { opponent == nil }
 
-    /// Positive when I'm ahead.
-    var margin: Double { me.points - (opponent?.points ?? 0) }
+    /// Positive when I'm ahead. Rounded to the cent so a sub-cent floating-point
+    /// difference reads as a tie, matching the scores as displayed.
+    var margin: Double { ScoreFormat.cents(me.points - (opponent?.points ?? 0)) }
 
     var isWinning: Bool { margin > 0 }
     var isTied: Bool { margin == 0 }
 
-    /// "+12.4" / "-3.2" / "Tied"
-    var marginText: String {
-        if isTied { return "Tied" }
-        return (margin > 0 ? "+" : "−") + ScoreFormat.points(abs(margin))
-    }
+    /// "+12.4" / "−3.2" / "Tied"
+    var marginText: String { ScoreFormat.marginText(margin) }
 }
 
 /// Formats fantasy points consistently everywhere ("104.3", not "104.30000000000001").
 enum ScoreFormat {
-    static func points(_ value: Double) -> String {
+    /// Rounds to two decimals; also folds -0 into 0.
+    static func cents(_ value: Double) -> Double {
         let rounded = (value * 100).rounded() / 100
+        return rounded == 0 ? 0 : rounded
+    }
+
+    /// "+12.4" / "−3.2" / "Tied" for a margin (uses U+2212 so the sign matches the width of "+").
+    static func marginText(_ margin: Double) -> String {
+        let rounded = cents(margin)
+        if rounded == 0 { return "Tied" }
+        return (rounded > 0 ? "+" : "−") + points(abs(rounded))
+    }
+
+    static func points(_ value: Double) -> String {
+        let rounded = cents(value)
         if rounded == rounded.rounded() {
             return String(format: "%.0f", rounded)
         }

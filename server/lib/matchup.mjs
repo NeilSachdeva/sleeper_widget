@@ -76,7 +76,7 @@ export class MatchupError extends Error {
  * @returns {Snapshot}
  */
 export function buildSnapshot({ userId, league, week, rosters, users, matchups, now = new Date() }) {
-  const myRoster = rosters.find((r) => r.owner_id === userId);
+  const myRoster = rosters.find((r) => r.owner_id === userId || (Array.isArray(r.co_owners) && r.co_owners.includes(userId)));
   if (!myRoster) {
     throw new MatchupError('noRosterForUser', "You don't have a team in this league.");
   }
@@ -98,7 +98,8 @@ export function buildSnapshot({ userId, league, week, rosters, users, matchups, 
     }
   }
 
-  const phase = opponent === null ? 'pregame' : gamePhase(me.points, opponent.points, now);
+  // On a bye the phase still follows the week so 'final' appears once games end.
+  const phase = gamePhase(me.points, opponent?.points ?? 0, now);
 
   return {
     leagueId: league.league_id,

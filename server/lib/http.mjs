@@ -33,6 +33,10 @@ export function validateRegistration(body, installId) {
   if (body.startedManually !== undefined && body.startedManually !== null && typeof body.startedManually !== 'boolean') {
     return { error: 'startedManually must be a boolean' };
   }
+  const suppressAutoStartUntil = optionalString(body.suppressAutoStartUntil);
+  if (suppressAutoStartUntil !== null && Number.isNaN(Date.parse(suppressAutoStartUntil))) {
+    return { error: 'suppressAutoStartUntil must be an ISO 8601 date' };
+  }
 
   const registration = {
     installId: body.installId,
@@ -44,6 +48,7 @@ export function validateRegistration(body, installId) {
     pushToStartToken: optionalString(body.pushToStartToken),
     activityToken: optionalString(body.activityToken),
     startedManually: body.startedManually === true,
+    suppressAutoStartUntil,
   };
   for (const field of ['pushToStartToken', 'activityToken']) {
     const value = registration[field];

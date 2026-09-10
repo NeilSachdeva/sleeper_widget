@@ -320,3 +320,18 @@ test('contentStateHash ignores updatedAtUnix', () => {
   assert.notEqual(contentStateHash(a), contentStateHash({ ...a, myPoints: 1.1 }));
   assert.notEqual(contentStateHash(a), contentStateHash({ ...a, myRecord: '1-0' }));
 });
+
+test('start is held back while the app reports suppressAutoStartUntil in the future', async () => {
+  const suppressed = await run({
+    rows: [registration({ pushToStartToken: PUSH_TO_START, suppressAutoStartUntil: iso(sundayAfternoon, 60 * 60 * 1000) })],
+    now: sundayAfternoon,
+  });
+  assert.equal(suppressed.apns.sent.length, 0, 'user tapped Stop for this window');
+
+  const expired = await run({
+    rows: [registration({ pushToStartToken: PUSH_TO_START, suppressAutoStartUntil: iso(sundayAfternoon, -60 * 1000) })],
+    now: sundayAfternoon,
+  });
+  assert.equal(expired.apns.sent.length, 1);
+  assert.equal(expired.apns.sent[0].payload.aps.event, 'start');
+});

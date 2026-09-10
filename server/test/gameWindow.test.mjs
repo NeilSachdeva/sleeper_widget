@@ -4,6 +4,7 @@ import {
   currentWindow,
   easternDate,
   easternParts,
+  holidayLabel,
   isLiveSpan,
   nextWindow,
   phase,
@@ -104,4 +105,34 @@ test('DST transition keeps wall-clock times', () => {
   // Thursday of that same week was still on EDT.
   const [thursday] = windows(eastern(2026, 11, 1, 13), 8);
   assert.equal(thursday.start.toISOString(), '2026-10-29T23:30:00.000Z');
+});
+
+test('Thanksgiving afternoon is a live window (mirrors GameWindowTests)', () => {
+  // Thanksgiving 2026 is Thu Nov 26 (12:30 / 16:30 / 20:20 ET kickoffs).
+  assert.equal(holidayLabel(eastern(2026, 11, 26, 12)), 'Thanksgiving');
+  assert.equal(holidayLabel(eastern(2026, 11, 19, 12)), null, 'the Thursday before is ordinary');
+  assert.equal(phase(8.4, 0, eastern(2026, 11, 26, 14)), 'live');
+  assert.equal(currentWindow(eastern(2026, 11, 26, 14), 12)?.label, 'Thanksgiving');
+  assert.equal(isLiveSpan(eastern(2026, 11, 26, 12, 30)), true);
+  assert.equal(isLiveSpan(eastern(2026, 11, 26, 11)), false);
+  assert.equal(currentWindow(eastern(2026, 11, 19, 14), 11), null, 'an ordinary Thursday afternoon stays off');
+  assert.equal(windows(eastern(2026, 11, 26, 14), 12).map((w) => w.label).join(','), 'Thanksgiving,Sunday,Monday Night');
+});
+
+test('Christmas on a Wednesday or Thursday is a live window', () => {
+  // Christmas 2030 falls on a Wednesday.
+  assert.equal(phase(10, 0, eastern(2030, 12, 25, 14)), 'live');
+  assert.equal(currentWindow(eastern(2030, 12, 25, 14), 17)?.label, 'Christmas');
+  assert.equal(currentWindow(eastern(2030, 12, 26, 21), 17)?.label, 'Thursday Night');
+  assert.equal(windows(eastern(2030, 12, 25, 14), 17).map((w) => w.label).join(','), 'Christmas,Thursday Night,Saturday,Sunday,Monday Night');
+  // Christmas 2025 falls on a Thursday and replaces the night window.
+  assert.equal(currentWindow(eastern(2025, 12, 25, 14), 17)?.label, 'Christmas');
+  assert.equal(windows(eastern(2025, 12, 25, 14), 17).map((w) => w.label).join(','), 'Christmas,Saturday,Sunday,Monday Night');
+  // Christmas on a Friday (2026) is an ordinary week.
+  assert.equal(holidayLabel(eastern(2026, 12, 25, 14)), null);
+});
+
+test('a week whose only scoring is negative is final, not pregame', () => {
+  assert.equal(phase(-1.2, 0, eastern(2026, 9, 23, 12)), 'final');
+  assert.equal(phase(0, 0, eastern(2026, 9, 23, 12)), 'pregame');
 });

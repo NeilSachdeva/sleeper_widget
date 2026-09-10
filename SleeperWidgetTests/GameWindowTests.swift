@@ -32,6 +32,35 @@ final class GameWindowTests: XCTestCase {
         XCTAssertEqual(GameWindow.current(at: eastern(2026, 9, 22, 0, 30), week: 2)?.label, "Monday Night")
     }
 
+    func testThanksgivingAfternoonIsLive() {
+        // Thanksgiving 2026 is Thu Nov 26 (12:30 / 16:30 / 20:20 ET kickoffs).
+        XCTAssertEqual(GameWindow.holidayLabel(for: eastern(2026, 11, 26, 12)), "Thanksgiving")
+        XCTAssertNil(GameWindow.holidayLabel(for: eastern(2026, 11, 19, 12)), "The Thursday before is ordinary")
+        XCTAssertEqual(GameWindow.phase(myPoints: 8.4, opponentPoints: 0, at: eastern(2026, 11, 26, 14)), .live)
+        XCTAssertEqual(GameWindow.current(at: eastern(2026, 11, 26, 14), week: 12)?.label, "Thanksgiving")
+        XCTAssertTrue(GameWindow.isLiveSpan(at: eastern(2026, 11, 26, 12, 30)))
+        XCTAssertFalse(GameWindow.isLiveSpan(at: eastern(2026, 11, 26, 11)))
+        XCTAssertNil(GameWindow.current(at: eastern(2026, 11, 19, 14), week: 11), "An ordinary Thursday afternoon stays off")
+        XCTAssertEqual(GameWindow.windows(for: eastern(2026, 11, 26, 14), week: 12).map(\.label), ["Thanksgiving", "Sunday", "Monday Night"])
+    }
+
+    func testChristmasMidweekIsLive() {
+        // Christmas 2030 falls on a Wednesday.
+        XCTAssertEqual(GameWindow.phase(myPoints: 10, opponentPoints: 0, at: eastern(2030, 12, 25, 14)), .live)
+        XCTAssertEqual(GameWindow.current(at: eastern(2030, 12, 25, 14), week: 17)?.label, "Christmas")
+        XCTAssertEqual(GameWindow.current(at: eastern(2030, 12, 26, 21), week: 17)?.label, "Thursday Night")
+        // Christmas 2025 falls on a Thursday and replaces the night window.
+        XCTAssertEqual(GameWindow.current(at: eastern(2025, 12, 25, 14), week: 17)?.label, "Christmas")
+        XCTAssertEqual(GameWindow.windows(for: eastern(2025, 12, 25, 14), week: 17).map(\.label), ["Christmas", "Saturday", "Sunday", "Monday Night"])
+        // Christmas on a Friday (2026) is an ordinary week.
+        XCTAssertNil(GameWindow.holidayLabel(for: eastern(2026, 12, 25, 14)))
+    }
+
+    func testNegativeOnlyScoringIsFinalAfterTheWeek() {
+        XCTAssertEqual(GameWindow.phase(myPoints: -1.2, opponentPoints: 0, at: eastern(2026, 9, 23, 12)), .final)
+        XCTAssertEqual(GameWindow.phase(myPoints: 0, opponentPoints: 0, at: eastern(2026, 9, 23, 12)), .pregame)
+    }
+
     func testNoWindowMidweekOrSundayMorning() {
         XCTAssertNil(GameWindow.current(at: eastern(2026, 9, 23, 12), week: 2))
         XCTAssertNil(GameWindow.current(at: eastern(2026, 9, 20, 7), week: 2))

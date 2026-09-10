@@ -15,18 +15,23 @@ enum SharedStore {
         static let liveActivityStartedManually = "liveActivity.manual"
         static let relayURL = "relay.url"
         static let relayAuthToken = "relay.authToken"
+        static let relayRegisteredAt = "relay.registeredAt"
         static let lastRefresh = "refresh.last"
+        static let autoStartSuppressedUntil = "liveActivity.suppressedUntil"
     }
 
     /// Falls back to standard defaults if the App Group is misconfigured, so the app
     /// still runs (widgets just won't see the data) instead of crashing.
     static let defaults: UserDefaults = {
-        UserDefaults(suiteName: AppConfig.appGroupIdentifier) ?? .standard
+        guard isAppGroupAvailable, let shared = UserDefaults(suiteName: AppConfig.appGroupIdentifier) else {
+            return .standard
+        }
+        return shared
     }()
 
-    static var isAppGroupAvailable: Bool {
-        UserDefaults(suiteName: AppConfig.appGroupIdentifier) != nil
-    }
+    /// `UserDefaults(suiteName:)` never returns nil for a missing entitlement, but the
+    /// container URL does, so that is the reliable check.
+    static var isAppGroupAvailable: Bool { containerURL != nil }
 
     /// Directory inside the App Group container for cached files (avatars).
     static var containerURL: URL? {
@@ -114,6 +119,19 @@ enum SharedStore {
         set { defaults.set(newValue, forKey: Key.liveActivityStartedManually) }
     }
 
+    /// After the user taps Stop, auto-start stays off until this time (the end of the
+    /// current game window) so the activity doesn't come straight back.
+    static var autoStartSuppressedUntil: Date? {
+        get { defaults.object(forKey: Key.autoStartSuppressedUntil) as? Date }
+        set { defaults.set(newValue, forKey: Key.autoStartSuppressedUntil) }
+    }
+
+    /// When the relay last accepted our registration; drives relay-first mode.
+    static var relayRegisteredAt: Date? {
+        get { defaults.object(forKey: Key.relayRegisteredAt) as? Date }
+        set { defaults.set(newValue, forKey: Key.relayRegisteredAt) }
+    }
+
     /// Base URL of the optional push relay in `server/` (e.g. https://relay.example.com).
     /// Falls back to `AppConfig.defaultRelayURL` when the user hasn't entered one.
     static var relayURL: URL? {
@@ -146,7 +164,7 @@ enum SharedStore {
     static func signOut() {
         for key in [Key.username, Key.userId, Key.userDisplayName, Key.userAvatarId,
                     Key.leagueId, Key.leagueName, Key.snapshot, Key.lastRefresh,
-                    Key.liveActivityStartedManually] {
+                    Key.liveActivityStartedManually, Key.autoStartSuppressedUntil, Key.relayRegisteredAt] {
             defaults.removeObject(forKey: key)
         }
     }

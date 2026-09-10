@@ -10,7 +10,8 @@
  *   `reconcile`: it is only ended when the matchup is final, and it keeps getting
  *   heartbeats outside game windows so its stale-date keeps moving.
  * - no activity but a `pushToStartToken`: `start` inside a game window, unless
- *   it is a bye week or we already sent a start for this league+week in the last
+ *   it is a bye week, the app reported `suppressAutoStartUntil` in the future (the
+ *   user tapped Stop), or we already sent a start for this league+week in the last
  *   30 minutes.
  * - a token APNs reports as dead is cleared so we stop sending to it.
  */
@@ -160,6 +161,10 @@ async function processRegistration({ registration, week, loadLeague, store, apns
   }
 
   if (registration.pushToStartToken && inWindow && snapshot.opponent !== null) {
+    // The user tapped Stop in the app: leave the activity off until the window is over.
+    const suppressedUntil = Date.parse(registration.suppressAutoStartUntil ?? '');
+    if (!Number.isNaN(suppressedUntil) && now.getTime() < suppressedUntil) return false;
+
     const startKey = `${snapshot.leagueId}:${snapshot.week}`;
     const recentlyStarted =
       registration.lastStartKey === startKey && elapsed(registration.lastStartPushAt, now) < START_COOLDOWN_MS;

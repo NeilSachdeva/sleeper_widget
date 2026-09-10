@@ -20,10 +20,9 @@ struct SleeperWidgetApp: App {
         .onChange(of: scenePhase) {
             switch scenePhase {
             case .active:
-                Task { await model.handleForeground() }
+                Task { await model.sceneDidBecomeActive() }
             case .background:
-                model.stopPolling()
-                BackgroundRefresh.schedule()
+                model.sceneDidEnterBackground()
             default:
                 break
             }

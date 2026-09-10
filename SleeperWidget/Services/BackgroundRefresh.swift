@@ -5,8 +5,14 @@ import Foundation
 /// 15–60 minutes for apps the user opens regularly), so treat this as a bonus on
 /// top of foreground refreshes and the optional push relay.
 enum BackgroundRefresh {
-    /// Asks the system for a refresh; sooner during a game window.
+    /// Asks the system for a refresh; sooner during a game window. In relay-first mode
+    /// (the relay accepted our registration recently) nothing is scheduled: the relay
+    /// pushes every change, so the phone does no background work of its own.
     static func schedule(now: Date = Date()) {
+        if MatchupRefresher.isRelayHandlingUpdates(now: now) {
+            BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: AppConfig.backgroundRefreshTaskIdentifier)
+            return
+        }
         let request = BGAppRefreshTaskRequest(identifier: AppConfig.backgroundRefreshTaskIdentifier)
         let week = SharedStore.snapshot?.week ?? 1
         let interval: TimeInterval = GameWindow.current(at: now, week: week) != nil ? 15 * 60 : 60 * 60

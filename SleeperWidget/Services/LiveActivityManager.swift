@@ -25,20 +25,22 @@ final class LiveActivityManager {
     private(set) var pushToStartToken: String?
     private(set) var activityPushToken: String?
     private(set) var relayStatus: String?
+    /// Mirrors Settings › app › Live Activities; refreshed live via `activityEnablementUpdates`.
+    private(set) var areActivitiesEnabled = ActivityAuthorizationInfo().areActivitiesEnabled
 
     @ObservationIgnored private var tokenTask: Task<Void, Never>?
     @ObservationIgnored private var stateTask: Task<Void, Never>?
     @ObservationIgnored private var pushToStartTask: Task<Void, Never>?
     @ObservationIgnored private var newActivitiesTask: Task<Void, Never>?
+    @ObservationIgnored private var enablementTask: Task<Void, Never>?
+    @ObservationIgnored private var startTask: Task<Void, Error>?
+    @ObservationIgnored private var relaySyncTask: Task<Void, Never>?
 
     init() {
         adoptExistingActivity()
         observePushToStartToken()
         observeNewActivities()
-    }
-
-    var areActivitiesEnabled: Bool {
-        ActivityAuthorizationInfo().areActivitiesEnabled
+        observeEnablement()
     }
 
     /// Whether the user allows the higher push budget (Settings › app › Live Activities › More Frequent Updates).
@@ -54,19 +56,37 @@ final class LiveActivityManager {
         }
     }
 
+    /// Re-reads the Settings toggle (also kept current by `observeEnablement`).
+    func refreshAuthorization() {
+        areActivitiesEnabled = ActivityAuthorizationInfo().areActivitiesEnabled
+    }
+
     // MARK: Lifecycle
 
-    /// Starts (or refreshes) the Live Activity for `snapshot`.
+    /// Starts (or refreshes) the Live Activity for `snapshot`. Concurrent callers (a cold
+    /// launch runs the foreground path twice) share one `Activity.request`.
     func start(with snapshot: MatchupSnapshot, manually: Bool) async throws {
+        if let startTask {
+            _ = try? await startTask.value
+            if let activity, isRunning, snapshot.matches(activity.attributes) {
+                await markManualIfNeeded(manually)
+                return
+            }
+        }
+        let task = Task { try await self.performStart(with: snapshot, manually: manually) }
+        startTask = task
+        defer { startTask = nil }
+        try await task.value
+    }
+
+    private func performStart(with snapshot: MatchupSnapshot, manually: Bool) async throws {
+        refreshAuthorization()
         guard areActivitiesEnabled else { throw LiveActivityError.disabled }
 
         if let activity, isRunning {
             if snapshot.matches(activity.attributes) {
                 await update(with: snapshot)
-                if manually, !SharedStore.liveActivityStartedManually {
-                    SharedStore.liveActivityStartedManually = true
-                    await syncRelay()
-                }
+                await markManualIfNeeded(manually)
                 return
             }
             await activity.end(nil, dismissalPolicy: .immediate)
@@ -76,6 +96,16 @@ final class LiveActivityManager {
         // previous window) so the Lock Screen shows only the new one.
         await MatchupRefresher.dismissAllActivities()
 
+        // Something else (a push-to-start, the other foreground call) may have started
+        // a matching activity while we were dismissing; adopt it instead of doubling up.
+        if let running = Activity<MatchupActivityAttributes>.activities.first(where: {
+            $0.activityState == .active && snapshot.matches($0.attributes)
+        }) {
+            SharedStore.liveActivityStartedManually = manually
+            adopt(running)
+            return
+        }
+
         let content = MatchupRefresher.activityContent(for: snapshot)
         let started = try Activity.request(
             attributes: snapshot.activityAttributes,
@@ -83,7 +113,15 @@ final class LiveActivityManager {
             pushType: .token
         )
         SharedStore.liveActivityStartedManually = manually
+        SharedStore.autoStartSuppressedUntil = nil
         adopt(started)
+    }
+
+    private func markManualIfNeeded(_ manually: Bool) async {
+        guard manually, !SharedStore.liveActivityStartedManually else { return }
+        SharedStore.liveActivityStartedManually = true
+        SharedStore.autoStartSuppressedUntil = nil
+        await syncRelay()
     }
 
     /// Pushes new scores into the running activity.
@@ -151,10 +189,12 @@ final class LiveActivityManager {
                 guard let self, !Task.isCancelled else { return }
                 switch state {
                 case .ended, .dismissed:
-                    if self.activity?.id == activity.id {
-                        self.clearActivity()
-                        await self.syncRelay()
-                    }
+                    guard self.activity?.id == activity.id else { return }
+                    // This task is the state observer itself: let it finish rather than
+                    // cancelling it, or the relay call below dies with URLError.cancelled.
+                    self.clearActivity(cancelStateObserver: false)
+                    Task { await self.syncRelay() }
+                    return
                 default:
                     break
                 }
@@ -163,10 +203,10 @@ final class LiveActivityManager {
         Task { await syncRelay() }
     }
 
-    private func clearActivity() {
+    private func clearActivity(cancelStateObserver: Bool = true) {
         tokenTask?.cancel()
-        stateTask?.cancel()
         tokenTask = nil
+        if cancelStateObserver { stateTask?.cancel() }
         stateTask = nil
         activity = nil
         activityPushToken = nil
@@ -185,27 +225,53 @@ final class LiveActivityManager {
     }
 
     /// Activities started remotely (push-to-start) show up here; adopt them so we
-    /// get their update tokens.
+    /// get their update tokens. Activities we started ourselves are already adopted.
     private func observeNewActivities() {
         newActivitiesTask = Task { [weak self] in
             for await started in Activity<MatchupActivityAttributes>.activityUpdates {
                 guard let self, !Task.isCancelled else { return }
-                if self.activity == nil || self.activity?.id == started.id || !self.isRunning {
+                guard self.activity?.id != started.id else { continue }
+                if self.activity == nil || !self.isRunning {
                     self.adopt(started)
                 }
             }
         }
     }
 
+    /// Keeps `areActivitiesEnabled` in step with the Settings toggle.
+    private func observeEnablement() {
+        enablementTask = Task { [weak self] in
+            for await enabled in ActivityAuthorizationInfo().activityEnablementUpdates {
+                guard let self, !Task.isCancelled else { return }
+                self.areActivitiesEnabled = enabled
+            }
+        }
+    }
+
     // MARK: Relay
 
-    /// Sends current tokens to the relay, if one is configured.
+    /// Sends current tokens to the relay, if one is configured. Calls are serialized so
+    /// the registration the relay ends up with is always the most recent one.
     func syncRelay() async {
+        let previous = relaySyncTask
+        let task = Task {
+            await previous?.value
+            await self.performRelaySync()
+        }
+        relaySyncTask = task
+        await task.value
+        if relaySyncTask == task { relaySyncTask = nil }
+    }
+
+    private func performRelaySync() async {
         guard let relayURL = SharedStore.relayURL else {
             relayStatus = nil
             return
         }
         guard let userId = SharedStore.userId, let leagueId = SharedStore.leagueId else { return }
+        let suppressedUntil = SharedStore.autoStartSuppressedUntil.flatMap { until in
+            until > Date() ? ISO8601DateFormatter().string(from: until) : nil
+        }
         let registration = RelayClient.Registration(
             installId: RelayClient.installId,
             userId: userId,
@@ -215,10 +281,12 @@ final class LiveActivityManager {
             activityId: isRunning ? activity?.id : nil,
             environment: RelayClient.apnsEnvironment,
             timeZone: TimeZone.current.identifier,
-            startedManually: isRunning && SharedStore.liveActivityStartedManually
+            startedManually: isRunning && SharedStore.liveActivityStartedManually,
+            suppressAutoStartUntil: suppressedUntil
         )
         do {
             try await relayClient(for: relayURL).register(registration)
+            SharedStore.relayRegisteredAt = Date()
             relayStatus = "Registered with relay"
         } catch {
             relayStatus = "Relay error: \(error.localizedDescription)"
@@ -228,6 +296,7 @@ final class LiveActivityManager {
     /// Removes this install from the relay (sign out / relay URL cleared).
     func unregisterFromRelay(at relayURL: URL) async {
         try? await relayClient(for: relayURL).unregister(installId: RelayClient.installId)
+        SharedStore.relayRegisteredAt = nil
         relayStatus = nil
     }
 
