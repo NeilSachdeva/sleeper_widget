@@ -106,6 +106,33 @@ xcodebuild test -scheme SleeperWidget -destination 'platform=iOS Simulator,name=
   over. Game windows are approximations of the NFL schedule in US Eastern time
   (`Shared/GameWindow.swift`), which you can adjust.
 
+## Testing on a device
+
+- **Live Activity UI:** the `#Preview` blocks in `MatchupLiveActivity.swift` and
+  `MatchupWidget.swift` render every presentation in Xcode's canvas with sample data.
+- **Refresh button:** the arrow on the Lock Screen banner and in the expanded Dynamic
+  Island runs `RefreshMatchupIntent` in the app's process without opening the app.
+- **Background refresh:** the Simulator never runs `BGAppRefreshTask`. On a device, pause
+  in the debugger after the app goes to the background and run:
+
+  ```
+  e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"com.sleeperwidget.refresh"]
+  ```
+
+- **Push updates without the relay:** copy the activity token from Settings › Diagnostics
+  and send a payload straight to APNs (sandbox host for Xcode builds). The Simulator
+  receives real APNs pushes on Apple silicon Macs:
+
+  ```
+  curl --http2 \
+    --header "apns-topic: com.sleeperwidget.app.push-type.liveactivity" \
+    --header "apns-push-type: liveactivity" \
+    --header "apns-priority: 10" \
+    --header "authorization: bearer $APNS_JWT" \
+    --data '{"aps":{"timestamp":'$(date +%s)',"event":"update","content-state":{"myPoints":91.4,"opponentPoints":80.2,"myRecord":"1-0","opponentRecord":"0-1","phase":"live","updatedAtUnix":'$(date +%s)'}}}' \
+    https://api.sandbox.push.apple.com/3/device/$ACTIVITY_PUSH_TOKEN
+  ```
+
 ## Push relay (optional)
 
 See [`server/README.md`](server/README.md). In short: create an APNs auth key, set four

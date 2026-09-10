@@ -1,7 +1,5 @@
-import ActivityKit
 import BackgroundTasks
 import Foundation
-import WidgetKit
 
 /// Opportunistic background score updates. iOS decides when (typically every
 /// 15–60 minutes for apps the user opens regularly), so treat this as a bonus on
@@ -27,15 +25,11 @@ enum BackgroundRefresh {
     /// Live Activity, reload widgets, and re-arm.
     static func perform() async {
         defer { schedule() }
-        guard let userId = SharedStore.userId, let leagueId = SharedStore.leagueId else { return }
+        guard SharedStore.isConfigured else { return }
 
         do {
-            let snapshot = try await MatchupService().fetchSnapshot(userId: userId, leagueId: leagueId)
-            SharedStore.snapshot = snapshot
-            SharedStore.lastRefresh = snapshot.updatedAt
-            await AvatarCache.prefetch(for: snapshot)
-            WidgetCenter.shared.reloadTimelines(ofKind: AppConfig.matchupWidgetKind)
-            await LiveActivityManager.applyInBackground(snapshot)
+            let snapshot = try await MatchupRefresher.refresh()
+            await MatchupRefresher.applyToActivities(snapshot)
         } catch {
             #if DEBUG
             print("BackgroundRefresh: refresh failed (\(error))")

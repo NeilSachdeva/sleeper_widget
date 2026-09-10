@@ -74,9 +74,9 @@ final class LiveActivityManager {
 
         // Clear cards left over from earlier activities (ended by the 8-hour limit or a
         // previous window) so the Lock Screen shows only the new one.
-        await Self.dismissAllActivities()
+        await MatchupRefresher.dismissAllActivities()
 
-        let content = Self.content(for: snapshot)
+        let content = MatchupRefresher.activityContent(for: snapshot)
         let started = try Activity.request(
             attributes: snapshot.activityAttributes,
             content: content,
@@ -89,13 +89,13 @@ final class LiveActivityManager {
     /// Pushes new scores into the running activity.
     func update(with snapshot: MatchupSnapshot) async {
         guard let activity, isRunning, snapshot.matches(activity.attributes) else { return }
-        await activity.update(Self.content(for: snapshot))
+        await activity.update(MatchupRefresher.activityContent(for: snapshot))
     }
 
     /// Ends the activity. It stays on the Lock Screen briefly with the final score.
     func end(with snapshot: MatchupSnapshot? = nil, immediately: Bool = false) async {
         guard let activity else { return }
-        let content = snapshot.map { Self.content(for: $0) }
+        let content = snapshot.map { MatchupRefresher.activityContent(for: $0) }
         await activity.end(content, dismissalPolicy: immediately ? .immediate : .default)
         clearActivity()
         await syncRelay()
@@ -109,61 +109,22 @@ final class LiveActivityManager {
             await end(immediately: true)
             return
         }
-        if Self.shouldKeepAlive(snapshot, manual: SharedStore.liveActivityStartedManually, now: now) {
+        if MatchupRefresher.shouldKeepActivityAlive(snapshot, manual: SharedStore.liveActivityStartedManually, now: now) {
             await update(with: snapshot)
         } else {
             await end(with: snapshot)
         }
     }
 
-    /// Automatic activities live for one game window; manual ones until the week is final.
-    static func shouldKeepAlive(_ snapshot: MatchupSnapshot, manual: Bool, now: Date = Date()) -> Bool {
-        guard snapshot.phase != .final else { return false }
-        return manual || GameWindow.current(at: now, week: snapshot.week) != nil
-    }
-
-    /// Whether the app should start an activity on its own right now.
-    static func shouldAutoStart(for snapshot: MatchupSnapshot, now: Date = Date()) -> Bool {
-        guard SharedStore.autoStartLiveActivity, !snapshot.isBye, snapshot.phase != .final else { return false }
-        return GameWindow.current(at: now, week: snapshot.week) != nil
-    }
-
-    // MARK: Background entry point
-
-    /// Updates whatever activities exist from a background task (no instance needed).
-    static func applyInBackground(_ snapshot: MatchupSnapshot, now: Date = Date()) async {
-        for activity in Activity<MatchupActivityAttributes>.activities {
-            switch activity.activityState {
-            case .active, .stale:
-                guard snapshot.matches(activity.attributes) else { continue }
-                if shouldKeepAlive(snapshot, manual: SharedStore.liveActivityStartedManually, now: now) {
-                    await activity.update(content(for: snapshot))
-                } else {
-                    await activity.end(content(for: snapshot), dismissalPolicy: .default)
-                }
-            default:
-                continue
-            }
-        }
-    }
-
-    /// Removes every activity of this type from the Lock Screen right away.
-    static func dismissAllActivities() async {
-        for activity in Activity<MatchupActivityAttributes>.activities {
-            await activity.end(nil, dismissalPolicy: .immediate)
-        }
+    /// Re-reads `Activity.activities` after something outside this object (the
+    /// background task, the refresh intent, a push) changed them.
+    func syncFromSystem() {
+        if let activity, activity.activityState == .active || activity.activityState == .stale { return }
+        clearActivity()
+        adoptExistingActivity()
     }
 
     // MARK: Helpers
-
-    static func content(for snapshot: MatchupSnapshot, now: Date = Date()) -> ActivityContent<MatchupActivityAttributes.ContentState> {
-        let inWindow = GameWindow.current(at: now, week: snapshot.week) != nil
-        return ActivityContent(
-            state: snapshot.activityContentState,
-            staleDate: now.addingTimeInterval(AppConfig.liveActivityStaleInterval),
-            relevanceScore: inWindow ? 100 : 50
-        )
-    }
 
     private func adoptExistingActivity() {
         let existing = Activity<MatchupActivityAttributes>.activities

@@ -1,3 +1,4 @@
+import ActivityKit
 import Foundation
 import Observation
 import WidgetKit
@@ -25,7 +26,6 @@ final class AppModel {
     let liveActivity = LiveActivityManager()
 
     @ObservationIgnored private let api = SleeperAPI()
-    @ObservationIgnored private let service = MatchupService()
     @ObservationIgnored private var refreshTask: Task<Void, Never>?
     @ObservationIgnored private var inFlightRefresh: Task<Void, Never>?
 
@@ -139,13 +139,10 @@ final class AppModel {
         let task = Task { [weak self] in
             guard let self else { return }
             await self.run {
-                let fresh = try await self.service.fetchSnapshot(userId: user.userId, leagueId: leagueId)
+                let fresh = try await MatchupRefresher.refresh()
                 self.snapshot = fresh
                 self.lastRefresh = fresh.updatedAt
-                SharedStore.snapshot = fresh
-                SharedStore.lastRefresh = fresh.updatedAt
-                await AvatarCache.prefetch(for: fresh)
-                WidgetCenter.shared.reloadTimelines(ofKind: AppConfig.matchupWidgetKind)
+                self.liveActivity.syncFromSystem()
                 await self.liveActivity.reconcile(with: fresh)
             }
         }
@@ -158,7 +155,7 @@ final class AppModel {
     func handleForeground() async {
         guard stage == .ready else { return }
         await refresh(force: true)
-        if let snapshot, !liveActivity.isRunning, LiveActivityManager.shouldAutoStart(for: snapshot) {
+        if let snapshot, !liveActivity.isRunning, MatchupRefresher.shouldAutoStart(snapshot) {
             try? await liveActivity.start(with: snapshot, manually: false)
         }
         await liveActivity.syncRelay()
@@ -192,8 +189,26 @@ final class AppModel {
         do {
             try await liveActivity.start(with: snapshot, manually: true)
             errorMessage = nil
+        } catch let error as ActivityAuthorizationError {
+            errorMessage = Self.message(for: error)
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Plain-language explanations for the ActivityKit errors a user can actually fix.
+    static func message(for error: ActivityAuthorizationError) -> String {
+        switch error {
+        case .denied:
+            return "Live Activities are turned off for this app. Enable them in Settings › Sleeper Widget."
+        case .targetMaximumExceeded, .globalMaximumExceeded:
+            return "Too many Live Activities are running. Dismiss one from the Lock Screen and try again."
+        case .visibility:
+            return "Open the app to the foreground to start the Live Activity."
+        case .unentitled, .unsupported, .unsupportedTarget:
+            return "This build isn't set up for Live Activities (check NSSupportsLiveActivities in Info.plist)."
+        default:
+            return error.localizedDescription
         }
     }
 

@@ -1,4 +1,5 @@
 import ActivityKit
+import AppIntents
 import SwiftUI
 import WidgetKit
 
@@ -46,7 +47,7 @@ struct MatchupLiveActivity: Widget {
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    HStack {
+                    HStack(spacing: 8) {
                         Text(context.attributes.leagueName)
                             .font(.caption2)
                             .foregroundStyle(.secondary)
@@ -55,6 +56,7 @@ struct MatchupLiveActivity: Widget {
                         Text(context.state.marginText)
                             .font(.system(.caption, design: .rounded, weight: .bold))
                             .foregroundStyle(WidgetStyle.marginColor(margin: context.state.margin))
+                        RefreshButton()
                     }
                 }
             } compactLeading: {
@@ -116,7 +118,7 @@ struct LockScreenMatchupView: View {
                     alignment: .trailing
                 )
             }
-            HStack {
+            HStack(spacing: 8) {
                 Text(attributes.leagueName)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -129,10 +131,26 @@ struct LockScreenMatchupView: View {
                 } else {
                     UpdatedText(date: state.updatedAt)
                 }
+                RefreshButton()
             }
         }
         .padding(14)
         .foregroundStyle(.white)
+    }
+}
+
+/// Runs `RefreshMatchupIntent` in the app's process without opening the app.
+/// Interactive controls are only honoured in the Lock Screen and expanded presentations.
+private struct RefreshButton: View {
+    var body: some View {
+        Button(intent: RefreshMatchupIntent()) {
+            Image(systemName: "arrow.clockwise")
+                .font(.system(size: 12, weight: .bold))
+                .padding(6)
+                .background(.white.opacity(0.15), in: Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Refresh scores")
     }
 }
 

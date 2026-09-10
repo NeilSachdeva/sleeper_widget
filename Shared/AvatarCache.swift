@@ -31,8 +31,26 @@ enum AvatarCache {
         guard let result = try? await session.data(from: remote) else { return }
         let (data, response) = result
         if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) { return }
-        guard UIImage(data: data) != nil else { return }
-        try? data.write(to: file, options: .atomic)
+        guard let image = UIImage(data: data), let png = downscaled(image).pngData() else { return }
+        try? png.write(to: file, options: .atomic)
+    }
+
+    /// Largest edge, in pixels, of a cached avatar. Live Activities reject images bigger
+    /// than their presentation, and the largest avatar we draw is 56 pt.
+    static let maxPixelSize: CGFloat = 168
+
+    static func downscaled(_ image: UIImage) -> UIImage {
+        let pixelWidth = image.size.width * image.scale
+        let pixelHeight = image.size.height * image.scale
+        let longest = max(pixelWidth, pixelHeight)
+        guard longest > maxPixelSize, longest > 0 else { return image }
+        let ratio = maxPixelSize / longest
+        let target = CGSize(width: (pixelWidth * ratio).rounded(), height: (pixelHeight * ratio).rounded())
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        return UIGraphicsImageRenderer(size: target, format: format).image { _ in
+            image.draw(in: CGRect(origin: .zero, size: target))
+        }
     }
 
     /// Prefetches both teams' avatars for a snapshot.
