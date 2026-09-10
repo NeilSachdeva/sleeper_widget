@@ -14,6 +14,7 @@ enum SharedStore {
         static let autoStartLiveActivity = "liveActivity.autoStart"
         static let liveActivityStartedManually = "liveActivity.manual"
         static let relayURL = "relay.url"
+        static let relayAuthToken = "relay.authToken"
         static let lastRefresh = "refresh.last"
     }
 
@@ -120,6 +121,15 @@ enum SharedStore {
             return URL(string: text)
         }
         set { defaults.set(newValue?.absoluteString, forKey: Key.relayURL) }
+    }
+
+    /// Bearer token for a relay started with RELAY_AUTH_TOKEN; empty means none.
+    static var relayAuthToken: String? {
+        get {
+            guard let text = defaults.string(forKey: Key.relayAuthToken), !text.isEmpty else { return nil }
+            return text
+        }
+        set { defaults.set(newValue, forKey: Key.relayAuthToken) }
     }
 
     // MARK: Reset

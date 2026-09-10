@@ -109,9 +109,11 @@ xcodebuild test -scheme SleeperWidget -destination 'platform=iOS Simulator,name=
 ## Push relay (optional)
 
 See [`server/README.md`](server/README.md). In short: create an APNs auth key, set four
-environment variables, run `npm start`, then paste the relay URL into the app's Settings.
-The app sends the relay its push-to-start token and, once an activity is running, that
-activity's update token.
+environment variables, run `npm start`, then paste the relay URL (and the bearer token, if
+you started the relay with `RELAY_AUTH_TOKEN`) into the app's Settings. The app sends the
+relay its push-to-start token and, once an activity is running, that activity's update
+token, plus whether you pinned the activity by hand so the relay knows not to end it
+between game windows.
 
 ## Notes on the API
 

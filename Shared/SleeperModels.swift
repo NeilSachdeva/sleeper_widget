@@ -175,8 +175,9 @@ struct SleeperState: Codable, Hashable {
         case seasonStartDate = "season_start_date"
     }
 
-    /// Week whose matchups are currently being played / shown by Sleeper.
-    var currentWeek: Int { max(1, week) }
+    /// Week whose matchups Sleeper itself shows; `display_week` can run ahead of
+    /// `week` around the Tuesday rollover, so prefer it when present.
+    var currentWeek: Int { max(1, displayWeek ?? week) }
 
     /// Season that leagues are keyed on (differs from `season` during the offseason).
     var currentLeagueSeason: String { leagueSeason ?? season }

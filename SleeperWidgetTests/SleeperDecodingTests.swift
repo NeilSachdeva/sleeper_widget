@@ -19,6 +19,10 @@ final class SleeperDecodingTests: XCTestCase {
         XCTAssertEqual(state.currentWeek, 2)
         XCTAssertEqual(state.currentLeagueSeason, "2026")
         XCTAssertTrue(state.isRegularOrPostseason)
+
+        let rollover = try decoder.decode(SleeperState.self, from: Data(#"{"week":2,"display_week":3,"season":"2026","season_type":"regular"}"#.utf8))
+        XCTAssertEqual(rollover.currentWeek, 3, "display_week wins when it differs from week")
+        XCTAssertEqual(rollover.currentLeagueSeason, "2026", "Falls back to season when league_season is absent")
     }
 
     func testDecodesMatchupWithNullsAndIntegers() throws {

@@ -63,7 +63,10 @@ final class LiveActivityManager {
         if let activity, isRunning {
             if snapshot.matches(activity.attributes) {
                 await update(with: snapshot)
-                if manually { SharedStore.liveActivityStartedManually = true }
+                if manually, !SharedStore.liveActivityStartedManually {
+                    SharedStore.liveActivityStartedManually = true
+                    await syncRelay()
+                }
                 return
             }
             await activity.end(nil, dismissalPolicy: .immediate)
@@ -232,10 +235,11 @@ final class LiveActivityManager {
             activityToken: isRunning ? activityPushToken : nil,
             activityId: isRunning ? activity?.id : nil,
             environment: RelayClient.apnsEnvironment,
-            timeZone: TimeZone.current.identifier
+            timeZone: TimeZone.current.identifier,
+            startedManually: isRunning && SharedStore.liveActivityStartedManually
         )
         do {
-            try await RelayClient(baseURL: relayURL).register(registration)
+            try await relayClient(for: relayURL).register(registration)
             relayStatus = "Registered with relay"
         } catch {
             relayStatus = "Relay error: \(error.localizedDescription)"
@@ -244,7 +248,11 @@ final class LiveActivityManager {
 
     /// Removes this install from the relay (sign out / relay URL cleared).
     func unregisterFromRelay(at relayURL: URL) async {
-        try? await RelayClient(baseURL: relayURL).unregister(installId: RelayClient.installId)
+        try? await relayClient(for: relayURL).unregister(installId: RelayClient.installId)
         relayStatus = nil
+    }
+
+    private func relayClient(for relayURL: URL) -> RelayClient {
+        RelayClient(baseURL: relayURL, authToken: SharedStore.relayAuthToken)
     }
 }

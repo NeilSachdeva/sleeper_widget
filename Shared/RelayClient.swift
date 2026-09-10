@@ -17,13 +17,18 @@ struct RelayClient: Sendable {
         /// "development" or "production" so the relay picks the right APNs host.
         var environment: String
         var timeZone: String
+        /// True when the user pinned the activity by hand; the relay then keeps it
+        /// alive between game windows instead of ending it.
+        var startedManually: Bool
     }
 
     let baseURL: URL
+    let authToken: String?
     let session: URLSession
 
-    init(baseURL: URL, session: URLSession = .shared) {
+    init(baseURL: URL, authToken: String? = nil, session: URLSession = .shared) {
         self.baseURL = baseURL
+        self.authToken = authToken
         self.session = session
     }
 
@@ -38,6 +43,7 @@ struct RelayClient: Sendable {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(registration)
         request.timeoutInterval = 15
+        authorize(&request)
         let (_, response) = try await session.data(for: request)
         if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
             throw SleeperAPIError.httpStatus(http.statusCode)
@@ -53,7 +59,15 @@ struct RelayClient: Sendable {
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         request.timeoutInterval = 15
+        authorize(&request)
         _ = try await session.data(for: request)
+    }
+
+    /// Adds `Authorization: Bearer …` when the relay is protected with RELAY_AUTH_TOKEN.
+    private func authorize(_ request: inout URLRequest) {
+        if let authToken, !authToken.isEmpty {
+            request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        }
     }
 
     /// Stable identifier for this install, created on first use.

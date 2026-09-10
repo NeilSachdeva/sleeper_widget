@@ -203,6 +203,12 @@ final class AppModel {
 
     // MARK: Relay
 
+    func updateRelaySettings(url text: String, token: String) async {
+        let trimmedToken = token.trimmingCharacters(in: .whitespacesAndNewlines)
+        SharedStore.relayAuthToken = trimmedToken.isEmpty ? nil : trimmedToken
+        await updateRelayURL(text)
+    }
+
     func updateRelayURL(_ text: String) async {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         let previous = SharedStore.relayURL

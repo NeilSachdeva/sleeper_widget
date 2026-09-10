@@ -5,6 +5,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var autoStart = SharedStore.autoStartLiveActivity
     @State private var relayURLText = SharedStore.relayURL?.absoluteString ?? ""
+    @State private var relayTokenText = SharedStore.relayAuthToken ?? ""
 
     var body: some View {
         NavigationStack {
@@ -38,9 +39,12 @@ struct SettingsView: View {
                         .keyboardType(.URL)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
-                        .onSubmit { Task { await model.updateRelayURL(relayURLText) } }
-                    Button("Save relay URL") {
-                        Task { await model.updateRelayURL(relayURLText) }
+                        .onSubmit { Task { await model.updateRelaySettings(url: relayURLText, token: relayTokenText) } }
+                    SecureField("Relay token (optional)", text: $relayTokenText)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    Button("Save relay settings") {
+                        Task { await model.updateRelaySettings(url: relayURLText, token: relayTokenText) }
                     }
                     if let status = model.liveActivity.relayStatus {
                         Text(status)
@@ -50,7 +54,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Push relay (optional)")
                 } footer: {
-                    Text("Run the server in the repo's server/ folder to start and update the Live Activity from the cloud, even when the app is closed. Leave blank to rely on foreground and background refresh.")
+                    Text("Run the server in the repo's server/ folder to start and update the Live Activity from the cloud, even when the app is closed. Leave blank to rely on foreground and background refresh. The token matches the relay's RELAY_AUTH_TOKEN, if you set one.")
                 }
 
                 Section {
