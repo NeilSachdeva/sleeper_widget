@@ -1,0 +1,16 @@
+{
+  "name": "sleeper-widget-relay",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Push relay that starts and updates the Sleeper Widget Live Activity via APNs while NFL games are on.",
+  "type": "module",
+  "main": "index.mjs",
+  "scripts": {
+    "start": "node index.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}
