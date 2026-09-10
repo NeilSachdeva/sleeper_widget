@@ -9,7 +9,7 @@ final class MatchupBuilderTests: XCTestCase {
 
     private func roster(_ id: Int, owner: String, wins: Int = 0, losses: Int = 0) -> SleeperRoster {
         SleeperRoster(
-            rosterId: id, ownerId: owner, leagueId: "L1", players: nil, starters: nil,
+            rosterId: id, ownerId: owner, leagueId: "L1",
             settings: SleeperRoster.Settings(
                 wins: wins, losses: losses, ties: nil, fpts: nil, fptsDecimal: nil,
                 fptsAgainst: nil, fptsAgainstDecimal: nil
@@ -25,10 +25,7 @@ final class MatchupBuilderTests: XCTestCase {
     }
 
     private func matchup(_ roster: Int, matchupId: Int?, points: Double?) -> SleeperMatchup {
-        SleeperMatchup(
-            rosterId: roster, matchupId: matchupId, points: points, customPoints: nil,
-            starters: nil, startersPoints: nil, playersPoints: nil
-        )
+        SleeperMatchup(rosterId: roster, matchupId: matchupId, points: points, customPoints: nil)
     }
 
     /// Sunday 4pm ET, week 2 of 2026 (games on).
@@ -109,10 +106,7 @@ final class MatchupBuilderTests: XCTestCase {
     }
 
     func testCustomPointsOverrideComputedPoints() {
-        let overridden = SleeperMatchup(
-            rosterId: 1, matchupId: 1, points: 50, customPoints: 60.5,
-            starters: nil, startersPoints: nil, playersPoints: nil
-        )
+        let overridden = SleeperMatchup(rosterId: 1, matchupId: 1, points: 50, customPoints: 60.5)
         XCTAssertEqual(overridden.effectivePoints, 60.5)
     }
 

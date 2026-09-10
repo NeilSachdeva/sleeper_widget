@@ -162,13 +162,17 @@ final class AppModel {
         startPolling()
     }
 
-    /// Refreshes every `foregroundRefreshInterval` while the matchup screen is visible.
+    /// Refreshes every `foregroundRefreshInterval` while the matchup screen is visible
+    /// and NFL games are on. Outside a game window scores can't change, so nothing polls;
+    /// pull-to-refresh and the next foreground still fetch on demand.
     func startPolling() {
         refreshTask?.cancel()
+        guard let week = snapshot?.week, GameWindow.current(week: week) != nil else { return }
         refreshTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(AppConfig.foregroundRefreshInterval))
                 guard let self, !Task.isCancelled else { return }
+                guard let week = self.snapshot?.week, GameWindow.current(week: week) != nil else { return }
                 await self.refresh()
             }
         }

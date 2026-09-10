@@ -81,18 +81,18 @@ struct SleeperRoster: Codable, Hashable {
         }
     }
 
+    // Only what the matchup needs is decoded. Sleeper also sends `players`,
+    // `starters`, and `reserve`, but decoding them buys nothing here.
     let rosterId: Int
     let ownerId: String?
     let leagueId: String?
-    let players: [String]?
-    let starters: [String]?
     let settings: Settings?
 
     enum CodingKeys: String, CodingKey {
         case rosterId = "roster_id"
         case ownerId = "owner_id"
         case leagueId = "league_id"
-        case players, starters, settings
+        case settings
     }
 }
 
@@ -131,23 +131,19 @@ struct SleeperLeagueUser: Codable, Hashable, Identifiable {
 }
 
 struct SleeperMatchup: Codable, Hashable {
+    // `starters`, `starters_points`, and `players_points` are the bulk of this
+    // response and are intentionally not decoded.
     let rosterId: Int
     /// Two rosters share a `matchupId` in a given week. `nil` on a bye week.
     let matchupId: Int?
     let points: Double?
     let customPoints: Double?
-    let starters: [String]?
-    let startersPoints: [Double]?
-    let playersPoints: [String: Double]?
 
     enum CodingKeys: String, CodingKey {
         case rosterId = "roster_id"
         case matchupId = "matchup_id"
         case points
         case customPoints = "custom_points"
-        case starters
-        case startersPoints = "starters_points"
-        case playersPoints = "players_points"
     }
 
     /// Commissioner overrides win over computed points.
