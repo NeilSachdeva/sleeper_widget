@@ -54,9 +54,13 @@ struct SettingsView: View {
                 } header: {
                     Text("Push relay (optional)")
                 } footer: {
-                    Text(AppConfig.defaultRelayURL == nil
-                         ? "Run the server in the repo's server/ folder to start and update the Live Activity from the cloud, even when the app is closed. Leave blank to rely on foreground and background refresh. The token matches the relay's RELAY_AUTH_TOKEN, if you set one."
-                         : "This build already uses a relay so the Live Activity starts and updates from the cloud. Enter your own relay here to override it.")
+                    if !AppConfig.supportsPush {
+                        Text("This is a Personal Team build, which can't receive pushes. Generate the project with project.yml on a paid developer team to use the relay.")
+                    } else if AppConfig.defaultRelayURL == nil {
+                        Text("Run the server in the repo's server/ folder to start and update the Live Activity from the cloud, even when the app is closed. Leave blank to rely on foreground and background refresh. The token matches the relay's RELAY_AUTH_TOKEN, if you set one.")
+                    } else {
+                        Text("This build already uses a relay so the Live Activity starts and updates from the cloud. Enter your own relay here to override it.")
+                    }
                 }
 
                 Section {

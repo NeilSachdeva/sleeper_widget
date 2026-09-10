@@ -107,10 +107,11 @@ final class LiveActivityManager {
         }
 
         let content = MatchupRefresher.activityContent(for: snapshot)
+        let pushType: PushType? = AppConfig.supportsPush ? PushType.token : nil
         let started = try Activity.request(
             attributes: snapshot.activityAttributes,
             content: content,
-            pushType: .token
+            pushType: pushType
         )
         SharedStore.liveActivityStartedManually = manually
         SharedStore.autoStartSuppressedUntil = nil
@@ -215,6 +216,7 @@ final class LiveActivityManager {
 
     /// Push-to-start tokens (iOS 17.2+) let the relay start the activity remotely.
     private func observePushToStartToken() {
+        guard AppConfig.supportsPush else { return }
         pushToStartTask = Task { [weak self] in
             for await token in Activity<MatchupActivityAttributes>.pushToStartTokenUpdates {
                 guard let self, !Task.isCancelled else { return }
@@ -264,6 +266,10 @@ final class LiveActivityManager {
     }
 
     private func performRelaySync() async {
+        guard AppConfig.supportsPush else {
+            relayStatus = SharedStore.relayURL == nil ? nil : "Push isn't available in Personal Team builds"
+            return
+        }
         guard let relayURL = SharedStore.relayURL else {
             relayStatus = nil
             return

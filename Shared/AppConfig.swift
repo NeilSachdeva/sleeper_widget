@@ -6,8 +6,19 @@ import Foundation
 /// the App Group must be registered under your Apple Developer team (Xcode's
 /// automatic signing does this the first time it sees the entitlement).
 enum AppConfig {
-    /// Name shown in the UI. The bundle display name in `project.yml` should match.
+    /// Name shown in the UI. The bundle display name in `spec/base.yml` should match.
     static let displayName = "Matchup Live"
+
+    /// False in builds generated from `project-personal.yml` (free Personal Team),
+    /// which cannot carry the Push Notifications entitlement: the activity is then
+    /// started without a push token and the relay is left unused.
+    static var supportsPush: Bool {
+        #if PERSONAL_TEAM
+        return false
+        #else
+        return true
+        #endif
+    }
 
     /// App Group used to share the latest matchup snapshot and settings between
     /// the app and the widget extension.

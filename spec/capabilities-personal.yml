@@ -1,0 +1,13 @@
+# Free Personal Team build: no App Groups and no Push Notifications, since Apple
+# doesn't allow either without a paid membership. The Live Activity and the app
+# work normally; Home/Lock Screen widgets can't read the app's data and the push
+# relay is disabled (see AppConfig.supportsPush). Builds expire after 7 days.
+targets:
+  SleeperWidget:
+    settings:
+      base:
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) PERSONAL_TEAM
+  SleeperWidgetExtension:
+    settings:
+      base:
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) PERSONAL_TEAM

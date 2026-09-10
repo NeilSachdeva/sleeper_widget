@@ -16,6 +16,21 @@ No Sleeper password is needed: the app uses Sleeper's public read-only API with 
 
 Mockups of every surface are in [`docs/mockups/`](docs/mockups/README.md).
 
+### No paid developer membership yet?
+
+A free Personal Team can still run the Live Activity on your own phone. Generate the
+project from the personal spec instead, which drops the App Groups and Push
+Notifications capabilities Apple doesn't allow on personal teams:
+
+```sh
+xcodegen generate --spec project-personal.yml
+```
+
+What changes: the Home and Lock Screen widgets can't read the app's data (they say
+"Open the app"), the push relay is disabled, and the build expires after 7 days. The
+Live Activity, the Dynamic Island, the in-activity refresh button, and foreground
+refresh all work as normal. Switch back to `xcodegen generate` once you have a paid team.
+
 ## How it works
 
 - **Sign in** with your Sleeper username and pick a league. The app finds your roster and

@@ -1,0 +1,16 @@
+# Capabilities for a paid Apple Developer Program team: App Groups (widgets read
+# the app's data) and Push Notifications (Live Activity tokens for the relay).
+targets:
+  SleeperWidget:
+    entitlements:
+      path: SleeperWidget/SleeperWidget.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.sleeperwidget.shared
+        aps-environment: development
+  SleeperWidgetExtension:
+    entitlements:
+      path: SleeperWidgetExtension/SleeperWidgetExtension.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.sleeperwidget.shared

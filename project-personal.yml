@@ -1,0 +1,9 @@
+# Build for a free Personal Team (no paid Apple Developer membership):
+#   xcodegen generate --spec project-personal.yml
+# Drops the App Groups and Push Notifications capabilities, which Apple does not
+# allow on personal teams. See spec/capabilities-personal.yml for what changes.
+include:
+  - path: spec/base.yml
+    relativePaths: false
+  - path: spec/capabilities-personal.yml
+    relativePaths: false
