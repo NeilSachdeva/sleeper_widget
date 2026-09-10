@@ -61,7 +61,7 @@ cp .env.example .env   # then edit
 | `APNS_BUNDLE_ID` | `com.sleeperwidget.app` | The **app** bundle id (`PRODUCT_BUNDLE_IDENTIFIER` of the `SleeperWidget` target in `project.yml`), not the widget extension's. APNs topic = `<bundle id>.push-type.liveactivity` |
 | `POLL_INTERVAL_SECONDS` | `60` | Sleeper poll / push cadence |
 | `STORE_PATH` | `./registrations.json` | Where registrations are persisted (atomic JSON file) |
-| `RELAY_AUTH_TOKEN` | unset | Optional. Requires `Authorization: Bearer <token>` on the registration routes. **The iOS `RelayClient` does not send this header today**, so only set it on a private deployment after adding the header in `Shared/RelayClient.swift`. |
+| `RELAY_AUTH_TOKEN` | unset | Optional. Requires `Authorization: Bearer <token>` on the registration routes (`/healthz` stays open). Enter the same value in the app under **Settings › Push relay (optional)** next to the URL; `RelayClient` sends it as a Bearer header. Recommended for any relay reachable from the internet. |
 
 `.env` is loaded if present (simple `KEY=value` lines; real environment variables win).
 If the three `APNS_*` credentials are missing the server still starts and accepts

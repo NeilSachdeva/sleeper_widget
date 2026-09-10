@@ -281,6 +281,27 @@ test('league data is fetched once per tick for many registrations, and errors ar
   assert.deepEqual(sleeper.calls.sort(), ['league', 'matchups', 'rosters', 'state', 'users']);
 });
 
+test('currentWeek mirrors SleeperState.currentWeek: display_week wins, floor of 1', () => {
+  assert.equal(currentWeek({ week: 2, display_week: 3 }), 3);
+  assert.equal(currentWeek({ week: 2, display_week: null }), 2);
+  assert.equal(currentWeek({ week: 2 }), 2);
+  assert.equal(currentWeek({ week: 0, display_week: null }), 1, 'offseason');
+  assert.equal(currentWeek({ week: 5, display_week: 0 }), 1, 'display_week is used even when it is lower');
+  assert.equal(currentWeek({}), 1);
+});
+
+test('the week comes from display_week when it differs from week', async () => {
+  const sleeper = fakeSleeper({ state: { week: 2, display_week: 3, season: '2026', season_type: 'regular' } });
+  const { store, apns } = await run({ rows: [registration({ pushToStartToken: PUSH_TO_START })], now: sundayAfternoon, sleeper });
+  assert.deepEqual(sleeper.weeksRequested, [3], 'matchups fetched for the displayed week');
+  assert.equal(apns.sent[0].payload.aps.attributes.week, 3);
+  assert.equal(store.get('install-1').lastStartKey, `${LEAGUE_ID}:3`);
+
+  const fallback = fakeSleeper({ state: { week: 2, display_week: null, season: '2026', season_type: 'regular' } });
+  await run({ rows: [registration({ pushToStartToken: PUSH_TO_START })], now: sundayAfternoon, sleeper: fallback });
+  assert.deepEqual(fallback.weeksRequested, [2], 'null display_week falls back to week');
+});
+
 test('no registrations means no Sleeper calls', async () => {
   const sleeper = fakeSleeper();
   const { summary } = await run({ rows: [], now: sundayAfternoon, sleeper });
