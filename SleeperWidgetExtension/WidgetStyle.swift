@@ -2,9 +2,13 @@ import SwiftUI
 
 /// Small shared pieces for the Live Activity and widget views.
 enum WidgetStyle {
+    // Every surface these are drawn on is dark (tinted Lock Screen banner, Dynamic
+    // Island, dark widget gradient), so use explicit colors rather than semantic ones
+    // that flip to dark gray in Light Mode.
     static let winning = Color.green
     static let losing = Color.red
-    static let neutral = Color.secondary
+    static let neutral = Color.white.opacity(0.75)
+    static let dimmed = Color.white.opacity(0.7)
 
     static func marginColor(margin: Double) -> Color {
         if margin > 0 { return winning }
@@ -29,7 +33,7 @@ struct PhaseBadge: View {
                 .font(.system(size: compact ? 9 : 10, weight: .bold, design: .rounded))
                 .tracking(0.5)
         }
-        .foregroundStyle(phase == .live ? Color.red : Color.secondary)
+        .foregroundStyle(phase == .live ? AnyShapeStyle(Color.red) : AnyShapeStyle(.secondary))
     }
 }
 

@@ -72,6 +72,10 @@ final class LiveActivityManager {
             await activity.end(nil, dismissalPolicy: .immediate)
         }
 
+        // Clear cards left over from earlier activities (ended by the 8-hour limit or a
+        // previous window) so the Lock Screen shows only the new one.
+        await Self.dismissAllActivities()
+
         let content = Self.content(for: snapshot)
         let started = try Activity.request(
             attributes: snapshot.activityAttributes,
@@ -105,13 +109,17 @@ final class LiveActivityManager {
             await end(immediately: true)
             return
         }
-        let inWindow = GameWindow.current(at: now, week: snapshot.week) != nil
-        let keepAlive = SharedStore.liveActivityStartedManually || inWindow || snapshot.phase == .live
-        if keepAlive && snapshot.phase != .final {
+        if Self.shouldKeepAlive(snapshot, manual: SharedStore.liveActivityStartedManually, now: now) {
             await update(with: snapshot)
         } else {
             await end(with: snapshot)
         }
+    }
+
+    /// Automatic activities live for one game window; manual ones until the week is final.
+    static func shouldKeepAlive(_ snapshot: MatchupSnapshot, manual: Bool, now: Date = Date()) -> Bool {
+        guard snapshot.phase != .final else { return false }
+        return manual || GameWindow.current(at: now, week: snapshot.week) != nil
     }
 
     /// Whether the app should start an activity on its own right now.
@@ -125,14 +133,24 @@ final class LiveActivityManager {
     /// Updates whatever activities exist from a background task (no instance needed).
     static func applyInBackground(_ snapshot: MatchupSnapshot, now: Date = Date()) async {
         for activity in Activity<MatchupActivityAttributes>.activities {
-            guard snapshot.matches(activity.attributes) else { continue }
-            let inWindow = GameWindow.current(at: now, week: snapshot.week) != nil
-            let keepAlive = SharedStore.liveActivityStartedManually || inWindow || snapshot.phase == .live
-            if keepAlive && snapshot.phase != .final {
-                await activity.update(content(for: snapshot))
-            } else {
-                await activity.end(content(for: snapshot), dismissalPolicy: .default)
+            switch activity.activityState {
+            case .active, .stale:
+                guard snapshot.matches(activity.attributes) else { continue }
+                if shouldKeepAlive(snapshot, manual: SharedStore.liveActivityStartedManually, now: now) {
+                    await activity.update(content(for: snapshot))
+                } else {
+                    await activity.end(content(for: snapshot), dismissalPolicy: .default)
+                }
+            default:
+                continue
             }
+        }
+    }
+
+    /// Removes every activity of this type from the Lock Screen right away.
+    static func dismissAllActivities() async {
+        for activity in Activity<MatchupActivityAttributes>.activities {
+            await activity.end(nil, dismissalPolicy: .immediate)
         }
     }
 
@@ -149,7 +167,7 @@ final class LiveActivityManager {
 
     private func adoptExistingActivity() {
         let existing = Activity<MatchupActivityAttributes>.activities
-        if let running = existing.first(where: { $0.activityState == .active || $0.activityState == .stale }) ?? existing.first {
+        if let running = existing.first(where: { $0.activityState == .active || $0.activityState == .stale }) {
             adopt(running)
         }
     }

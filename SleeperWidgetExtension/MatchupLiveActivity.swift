@@ -59,11 +59,11 @@ struct MatchupLiveActivity: Widget {
                 }
             } compactLeading: {
                 ScoreText(points: context.state.myPoints, size: 14, weight: .bold)
-                    .foregroundStyle(context.state.margin >= 0 ? WidgetStyle.winning : Color.primary)
+                    .foregroundStyle(context.state.margin >= 0 ? WidgetStyle.winning : Color.white)
                     .padding(.leading, 4)
             } compactTrailing: {
                 ScoreText(points: context.state.opponentPoints, size: 14, weight: .semibold)
-                    .foregroundStyle(context.state.margin < 0 ? WidgetStyle.losing : Color.secondary)
+                    .foregroundStyle(context.state.margin < 0 ? WidgetStyle.losing : WidgetStyle.dimmed)
                     .padding(.trailing, 4)
             } minimal: {
                 Text(context.state.isTied ? "=" : (context.state.margin > 0 ? "+" : "−") + ScoreFormat.points(abs(context.state.margin)))
@@ -195,7 +195,7 @@ private struct ExpandedTeamView: View {
                 }
             }
             ScoreText(points: points, size: 22, weight: isLeading ? .heavy : .semibold)
-                .foregroundStyle(isLeading ? Color.primary : Color.secondary)
+                .foregroundStyle(isLeading ? Color.white : WidgetStyle.dimmed)
             if let record {
                 Text(record)
                     .font(.system(size: 9, weight: .medium, design: .rounded))

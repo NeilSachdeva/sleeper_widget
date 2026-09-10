@@ -16,8 +16,9 @@ struct SleeperWidgetApp: App {
                     Task { await model.refresh(force: true) }
                 }
         }
-        .onChange(of: scenePhase) { _, phase in
-            switch phase {
+        // Scene.onChange only offers the zero-argument action form; read the phase directly.
+        .onChange(of: scenePhase) {
+            switch scenePhase {
             case .active:
                 Task { await model.handleForeground() }
             case .background:

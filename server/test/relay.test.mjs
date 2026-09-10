@@ -148,14 +148,18 @@ test('heartbeat every 20 minutes inside a window, at low priority', async () => 
   });
   assert.equal(notDue.apns.sent.length, 0);
 
-  // Between the Sunday and Monday windows: no heartbeat, and no end either (week is still live).
+  // Between the Sunday and Monday windows an automatic activity is ended (one activity
+  // per window keeps well inside Apple's 8-hour limit); Monday night starts a fresh one.
   const mondayHash = hashFor(mondayMorning);
   const betweenWindows = await run({
-    rows: [registration({ activityToken: ACTIVITY_TOKEN, lastContentStateHash: mondayHash, lastPushAt: iso(mondayMorning, -2 * HEARTBEAT_MS) })],
+    rows: [registration({ activityToken: ACTIVITY_TOKEN, activityId: 'act-1', lastContentStateHash: mondayHash, lastPushAt: iso(mondayMorning, -2 * HEARTBEAT_MS) })],
     now: mondayMorning,
   });
-  assert.equal(betweenWindows.apns.sent.length, 0);
-  assert.equal(betweenWindows.store.get('install-1').activityToken, ACTIVITY_TOKEN);
+  assert.equal(betweenWindows.apns.sent.length, 1);
+  assert.equal(betweenWindows.apns.sent[0].payload.aps.event, 'end');
+  assert.equal(betweenWindows.apns.sent[0].payload.aps['content-state'].phase, 'live');
+  assert.equal(betweenWindows.store.get('install-1').activityToken, null);
+  assert.equal(betweenWindows.store.get('install-1').activityId, null);
 });
 
 test('end is pushed once the week is final and the activity token is cleared', async () => {

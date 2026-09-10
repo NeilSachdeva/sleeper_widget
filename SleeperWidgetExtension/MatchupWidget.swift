@@ -35,10 +35,17 @@ struct MatchupProvider: TimelineProvider {
         MatchupEntry(date: Date(), snapshot: SharedStore.snapshot, isConfigured: SharedStore.isConfigured)
     }
 
-    /// Fetches live scores when the widget is refreshed; falls back to the stored snapshot.
-    static func freshEntry() async -> MatchupEntry {
+    /// Snapshots newer than this are served as-is; the app writes one on every poll.
+    static let reuseInterval: TimeInterval = 2 * 60
+
+    /// Fetches live scores when the widget is refreshed; reuses a just-written snapshot
+    /// and falls back to the stored one when offline.
+    static func freshEntry(now: Date = Date()) async -> MatchupEntry {
         guard let userId = SharedStore.userId, let leagueId = SharedStore.leagueId else {
-            return MatchupEntry(date: Date(), snapshot: nil, isConfigured: false)
+            return MatchupEntry(date: now, snapshot: nil, isConfigured: false)
+        }
+        if let stored = SharedStore.snapshot, now.timeIntervalSince(stored.updatedAt) < reuseInterval {
+            return MatchupEntry(date: now, snapshot: stored, isConfigured: true)
         }
         if let fresh = try? await MatchupService().fetchSnapshot(userId: userId, leagueId: leagueId) {
             SharedStore.snapshot = fresh
@@ -48,16 +55,18 @@ struct MatchupProvider: TimelineProvider {
         return storedEntry()
     }
 
-    /// Refresh often while games are on, otherwise wait for the next kickoff (or an hour).
+    /// Refresh often while games are on; otherwise wake at the next kickoff, checking in
+    /// every few hours so a new week's matchup still shows up.
     static func nextRefresh(after date: Date, snapshot: MatchupSnapshot?) -> Date {
         let week = snapshot?.week ?? 1
         if GameWindow.current(at: date, week: week) != nil {
             return date.addingTimeInterval(15 * 60)
         }
-        if let next = GameWindow.next(after: date, week: week), next.start.timeIntervalSince(date) < 6 * 3600 {
-            return next.start
+        let fallback = date.addingTimeInterval(4 * 3600)
+        if let next = GameWindow.next(after: date, week: week) {
+            return min(next.start, fallback)
         }
-        return date.addingTimeInterval(60 * 60)
+        return fallback
     }
 }
 

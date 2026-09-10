@@ -4,7 +4,8 @@
  *
  * - running activity (`activityToken`): `update` when the content-state changed,
  *   a low-priority heartbeat every 20 min inside a game window, or `end` once the
- *   window is over and the week is no longer live (or the matchup is final).
+ *   game window is over (or the matchup is final). One activity per window keeps
+ *   well inside Apple's 8-hour limit; the next window starts a fresh one.
  *   An activity the user started by hand (`startedManually`) mirrors the app's
  *   `reconcile`: it is only ended when the matchup is final, and it keeps getting
  *   heartbeats outside game windows so its stale-date keeps moving.
@@ -119,7 +120,7 @@ async function processRegistration({ registration, week, loadLeague, store, apns
 
   if (registration.activityToken) {
     const manual = registration.startedManually === true;
-    const shouldEnd = snapshot.phase === 'final' || (!manual && !inWindow && snapshot.phase !== 'live');
+    const shouldEnd = snapshot.phase === 'final' || (!manual && !inWindow);
     if (shouldEnd) {
       const result = await push({
         apns, log, registration, now, kind: 'end', priority: 10,
