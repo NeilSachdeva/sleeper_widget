@@ -1,0 +1,109 @@
+# XcodeGen spec — run `xcodegen generate` to produce SleeperWidget.xcodeproj.
+# Change `bundleIdPrefix` and the App Group in Shared/AppConfig.swift together.
+name: SleeperWidget
+options:
+  bundleIdPrefix: com.sleeperwidget
+  deploymentTarget:
+    iOS: "17.2"
+  xcodeVersion: "16.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    SWIFT_STRICT_CONCURRENCY: minimal
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: ""
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    TARGETED_DEVICE_FAMILY: "1"
+    IPHONEOS_DEPLOYMENT_TARGET: "17.2"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: NO
+
+targets:
+  SleeperWidget:
+    type: application
+    platform: iOS
+    sources:
+      - path: SleeperWidget
+      - path: Shared
+    dependencies:
+      - target: SleeperWidgetExtension
+        embed: true
+        codeSign: true
+    info:
+      path: SleeperWidget/Info.plist
+      properties:
+        CFBundleDisplayName: Sleeper Widget
+        CFBundleName: SleeperWidget
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        NSSupportsLiveActivities: true
+        NSSupportsLiveActivitiesFrequentUpdates: true
+        UIBackgroundModes:
+          - fetch
+          - processing
+        BGTaskSchedulerPermittedIdentifiers:
+          - com.sleeperwidget.refresh
+        CFBundleURLTypes:
+          - CFBundleURLName: com.sleeperwidget.deeplink
+            CFBundleURLSchemes:
+              - sleeperwidget
+        ITSAppUsesNonExemptEncryption: false
+    entitlements:
+      path: SleeperWidget/SleeperWidget.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.sleeperwidget.shared
+        aps-environment: development
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sleeperwidget.app
+        PRODUCT_NAME: SleeperWidget
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        SWIFT_EMIT_LOC_STRINGS: YES
+    scheme:
+      testTargets:
+        - SleeperWidgetTests
+
+  SleeperWidgetExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: SleeperWidgetExtension
+      - path: Shared
+    info:
+      path: SleeperWidgetExtension/Info.plist
+      properties:
+        CFBundleDisplayName: Sleeper Widget
+        CFBundleName: SleeperWidgetExtension
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: SleeperWidgetExtension/SleeperWidgetExtension.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.sleeperwidget.shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sleeperwidget.app.widgets
+        PRODUCT_NAME: SleeperWidgetExtension
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME: WidgetBackground
+        SKIP_INSTALL: YES
+
+  SleeperWidgetTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: SleeperWidgetTests
+    dependencies:
+      - target: SleeperWidget
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sleeperwidget.app.tests

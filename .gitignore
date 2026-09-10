@@ -1,0 +1,25 @@
+# Xcode
+*.xcodeproj/
+!*.xcodeproj/project.pbxproj
+*.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# macOS
+.DS_Store
+
+# Node (server/)
+server/node_modules/
+server/registrations.json
+server/.env
+*.p8
