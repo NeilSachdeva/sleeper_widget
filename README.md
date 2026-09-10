@@ -14,6 +14,8 @@ Lock Screen and Home Screen widgets for a quick glance any time.
 
 No Sleeper password is needed: the app uses Sleeper's public read-only API with your username.
 
+Mockups of every surface are in [`docs/mockups/`](docs/mockups/README.md).
+
 ## How it works
 
 - **Sign in** with your Sleeper username and pick a league. The app finds your roster and

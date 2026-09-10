@@ -1,0 +1,326 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Sleeper Widget mockups</title>
+<link rel="stylesheet" href="inter-local.css">
+<style>
+:root{--green:#30d158;--red:#ff453a;--blue:#0a84ff;--ink:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:#d9dbe3;font-family:'Inter',-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding:32px;color:#111}
+.row{display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;margin-bottom:40px}
+.shot{display:inline-block}
+.caption{font-size:13px;font-weight:600;color:#444;margin:0 0 22px 4px;letter-spacing:.2px}
+.tnum{font-variant-numeric:tabular-nums}
+svg{display:block}
+
+/* ---------- phone ---------- */
+.phone{width:393px;height:852px;border-radius:56px;overflow:hidden;position:relative;background:#000;box-shadow:0 0 0 11px #0e0e10,0 0 0 13px #3a3a3f,0 30px 60px rgba(0,0,0,.35)}
+.wall{position:absolute;inset:0;background:radial-gradient(130% 90% at 15% 0%,#264b86 0%,#0d1f42 45%,#05070f 100%)}
+.wall:after{content:"";position:absolute;inset:0;background:radial-gradient(55% 40% at 82% 62%,rgba(48,209,88,.22),transparent 65%),radial-gradient(45% 35% at 12% 85%,rgba(90,140,255,.22),transparent 60%)}
+.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:126px;height:37px;background:#000;border-radius:20px;z-index:5}
+.status{position:absolute;top:17px;left:0;right:0;display:flex;justify-content:space-between;padding:0 30px 0 38px;color:#fff;font-size:17px;font-weight:600;z-index:4}
+.status .icons{display:flex;gap:7px;align-items:center}
+.lockicon{position:absolute;top:60px;left:50%;transform:translateX(-50%);color:#fff;opacity:.9}
+.date{position:absolute;top:88px;left:0;right:0;text-align:center;color:#fff;font-size:21px;font-weight:500;letter-spacing:.2px}
+.time{position:absolute;top:112px;left:0;right:0;text-align:center;color:#fff;font-size:92px;font-weight:500;letter-spacing:-2px;line-height:1}
+.time.thin{font-weight:400}
+.quick{position:absolute;bottom:52px;width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.18);backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:center;color:#fff}
+.quick.l{left:44px}.quick.r{right:44px}
+.homebar{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#fff;opacity:.9}
+.stack{position:absolute;left:10px;right:10px;bottom:132px;display:flex;flex-direction:column;gap:8px}
+.notif{border-radius:22px;background:rgba(255,255,255,.22);backdrop-filter:blur(30px);padding:12px 14px;color:#fff;display:flex;gap:12px;align-items:flex-start}
+.notif .app{width:38px;height:38px;border-radius:9px;background:linear-gradient(160deg,#1f8fff,#0a5bd6);display:flex;align-items:center;justify-content:center;flex:none}
+.notif .t{font-size:15px;font-weight:600}
+.notif .b{font-size:14px;opacity:.9;margin-top:1px}
+.notif .when{font-size:12px;opacity:.6;margin-left:auto;padding-top:2px}
+
+/* ---------- Live Activity banner ---------- */
+.la{border-radius:24px;background:rgba(0,0,0,.55);backdrop-filter:blur(30px);color:#fff;padding:14px}
+.la.stale{opacity:.75}
+.la .top{display:flex;align-items:center;gap:12px}
+.team{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.team.trailing{justify-content:flex-end;text-align:right}
+.avatar{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.av-me{background:linear-gradient(145deg,#3ddc84,#0f8a4a)}
+.av-op{background:linear-gradient(145deg,#ff8a5b,#c2410c)}
+.av-init{background:rgba(255,255,255,.25)}
+.tcol{display:flex;flex-direction:column;gap:1px;min-width:0}
+.name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.record{font-size:10px;font-weight:500;color:rgba(255,255,255,.62)}
+.score{font-size:24px;font-weight:800;line-height:1.05}
+.score.dim{font-weight:600;color:rgba(255,255,255,.7)}
+.center{min-width:52px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.wk{font-size:10px;font-weight:600;color:rgba(255,255,255,.62)}
+.badge{font-size:9px;font-weight:700;letter-spacing:.6px;display:flex;align-items:center;gap:4px;color:rgba(255,255,255,.62)}
+.badge.live{color:var(--red)}
+.badge .dot{width:6px;height:6px;border-radius:50%;background:var(--red)}
+.margin{font-size:12px;font-weight:700}
+.win{color:var(--green)}.lose{color:var(--red)}.tie{color:rgba(255,255,255,.75)}
+.la .foot{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:11px;color:rgba(255,255,255,.62)}
+.la .foot .sp{flex:1}
+.refresh{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;color:#fff;flex:none}
+
+/* ---------- Dynamic Island ---------- */
+.topcrop{width:393px;height:230px;border-radius:56px 56px 0 0;overflow:hidden;position:relative;background:#000;box-shadow:0 0 0 11px #0e0e10,0 0 0 13px #3a3a3f}
+.topcrop .wall{filter:saturate(1.1)}
+.di-compact{position:absolute;top:11px;left:50%;transform:translateX(-50%);height:37px;min-width:126px;background:#000;border-radius:20px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;color:#fff;font-size:14px;gap:70px;z-index:6}
+.di-compact .l{font-weight:700;color:var(--green)}
+.di-compact .r{font-weight:600;color:rgba(255,255,255,.7)}
+.di-min{position:absolute;top:11px;left:calc(50% + 50px);height:37px;min-width:40px;padding:0 7px;background:#000;border-radius:20px;display:flex;align-items:center;justify-content:center;color:var(--green);font-size:11px;font-weight:700;z-index:6}
+.di-exp{position:absolute;top:11px;left:11px;width:371px;background:#000;border-radius:44px;padding:16px 20px 14px;color:#fff;box-shadow:0 0 0 1px rgba(48,209,88,.45);z-index:6}
+.di-exp .top{display:flex;align-items:flex-start;gap:8px;margin-top:22px}
+.di-exp .team{flex-direction:column;align-items:flex-start;gap:2px}
+.di-exp .team.trailing{align-items:flex-end}
+.di-exp .nm{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600}
+.di-exp .score{font-size:22px}
+.di-exp .record{font-size:9px}
+.di-exp .center{gap:2px;padding-top:2px}
+.di-exp .bottom{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:11px;color:rgba(255,255,255,.62)}
+.di-exp .bottom .sp{flex:1}
+.di-exp .bottom .margin{font-size:12px}
+.icons-under{position:absolute;top:70px;left:0;right:0;display:flex;justify-content:center;gap:26px;padding:0 26px}
+.appic{width:60px;height:60px;border-radius:14px;background:rgba(255,255,255,.15);backdrop-filter:blur(10px)}
+
+/* ---------- accessory widgets ---------- */
+.widgets{position:absolute;top:222px;left:0;right:0;display:flex;justify-content:center;gap:14px;align-items:center}
+.acc{color:#fff;backdrop-filter:blur(20px)}
+.circ{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.circ .a{font-size:15px;font-weight:700}
+.circ .line{width:24px;height:1px;background:rgba(255,255,255,.5)}
+.circ .b{font-size:12px;font-weight:500}
+.rect{width:172px;height:72px;border-radius:14px;background:rgba(255,255,255,.22);padding:8px 10px;display:flex;flex-direction:column;gap:2px;justify-content:center}
+.rect .h{display:flex;align-items:center;gap:4px;font-size:11px;color:rgba(255,255,255,.85)}
+.rect .h b{font-weight:600}
+.rect .ln{display:flex;justify-content:space-between;font-size:13px;gap:8px}
+.rect .ln.bold{font-weight:700}
+.inline{position:absolute;top:88px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:6px;color:#fff;font-size:17px;font-weight:500}
+
+/* ---------- Home Screen widgets ---------- */
+.homecrop{width:393px;height:430px;border-radius:56px 56px 0 0;overflow:hidden;position:relative;background:#000;box-shadow:0 0 0 11px #0e0e10,0 0 0 13px #3a3a3f}
+.hw{position:absolute;top:76px;left:27px;right:27px;display:flex;flex-direction:column;gap:18px}
+.hw .grid{display:flex;gap:23px}
+.wcard{border-radius:22px;background:linear-gradient(180deg,#121729,#1c2645);color:#fff;padding:14px;box-shadow:0 8px 20px rgba(0,0,0,.35)}
+.wcard.small{width:158px;height:158px;display:flex;flex-direction:column}
+.wcard.medium{width:338px;height:158px}
+.wcard .league{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:rgba(255,255,255,.7)}
+.wcard .srow{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;margin-top:6px;white-space:nowrap}
+.wcard .srow span:not(.s){overflow:hidden;text-overflow:ellipsis;font-size:11px}
+.wcard .srow .s{margin-left:auto;font-size:16px;font-weight:800}
+.wcard .srow .s.dim{font-weight:600;color:rgba(255,255,255,.7)}
+.wcard .fut{margin-top:auto;display:flex;justify-content:space-between;font-size:11px;font-weight:500;color:rgba(255,255,255,.8)}
+.wcard .cols{display:flex;gap:12px;margin-top:10px;align-items:flex-start}
+.wcard .col{flex:1;display:flex;flex-direction:column;gap:3px}
+.wcard .col.tr{align-items:flex-end;text-align:right}
+.wcard .col .nm{font-size:12px;font-weight:600}
+.wcard .col .rc{font-size:10px;color:rgba(255,255,255,.6)}
+.wcard .mid{display:flex;flex-direction:column;align-items:center;gap:2px;padding-top:22px}
+.wcard .mid .wk{font-size:10px}
+.wcard .mid .margin{font-size:13px}
+.iconrow{display:flex;gap:23px}
+.iconrow .ic{width:60px;height:60px;border-radius:14px;background:rgba(255,255,255,.16)}
+
+/* ---------- app screens ---------- */
+.app{background:#f2f2f7;color:#111}
+.app .status{color:#000}
+.nav{position:absolute;top:56px;left:0;right:0;height:44px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600}
+.nav .gear{position:absolute;right:18px;color:var(--green)}
+.nav .lead{position:absolute;left:18px;color:var(--green);font-weight:500}
+.content{position:absolute;top:104px;left:16px;right:16px;display:flex;flex-direction:column;gap:20px}
+.card{background:#fff;border-radius:20px;padding:20px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.card .hd{display:flex;justify-content:space-between;font-size:15px;font-weight:600;color:#6e6e73}
+.card .hd .live{color:var(--red);display:flex;align-items:center;gap:5px}
+.card .hd .live .dot{width:7px;height:7px;border-radius:50%;background:var(--red)}
+.cols{display:flex;gap:12px;margin-top:16px;align-items:flex-start}
+.col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.col .nm{font-size:15px;font-weight:600}
+.col .own{font-size:12px;color:#6e6e73}
+.col .big{font-size:34px;font-weight:800;line-height:1.05}
+.col .big.dim{font-weight:600;color:#6e6e73}
+.col .rc{font-size:12px;font-weight:500;color:#6e6e73}
+.vs{display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:36px}
+.vs .v{font-size:12px;font-weight:700;color:#c7c7cc}
+.vs .m{font-size:17px;font-weight:600;color:var(--green)}
+.lacard .hd2{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:600}
+.pill{margin-left:auto;font-size:12px;font-weight:700;color:var(--green);background:rgba(48,209,88,.18);padding:3px 8px;border-radius:999px}
+.foot13{font-size:13px;color:#6e6e73;margin-top:12px;line-height:1.35}
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:10px;padding:9px 16px;font-size:15px;font-weight:600;margin-top:12px}
+.btn.prom{background:var(--green);color:#fff}
+.btn.bord{background:rgba(255,69,58,.14);color:var(--red)}
+.updated{text-align:center;font-size:12px;color:#6e6e73}
+
+/* sign-in */
+.signin{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px;gap:22px;text-align:center}
+.signin h1{font-size:34px;font-weight:700;margin:0}
+.signin p{margin:6px 0 0;font-size:17px;color:#6e6e73;line-height:1.3}
+.field{width:100%;background:#fff;border-radius:12px;padding:16px;text-align:left;font-size:17px;color:#a0a0a5;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.field.filled{color:#111}
+.hint{font-size:13px;color:#6e6e73;text-align:left;width:100%;margin-top:-12px}
+.cta{width:100%;background:var(--green);color:#fff;border-radius:12px;padding:15px;font-size:17px;font-weight:600}
+.cta.dis{opacity:.5}
+
+/* league list */
+.list{position:absolute;top:150px;left:16px;right:16px}
+.list .sec{font-size:13px;color:#6e6e73;text-transform:uppercase;letter-spacing:.3px;margin:0 0 8px 16px}
+.list .grp{background:#fff;border-radius:12px;overflow:hidden}
+.lrow{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:.5px solid #e5e5ea;font-size:17px}
+.lrow:last-child{border-bottom:0}
+.lrow .lav{width:36px;height:36px;border-radius:8px;flex:none}
+.lrow .sub{font-size:12px;color:#6e6e73;margin-top:2px}
+.lrow .chev{margin-left:auto;color:#c7c7cc}
+.list .ft{font-size:13px;color:#6e6e73;margin:8px 0 0 16px}
+.bigtitle{position:absolute;top:100px;left:16px;font-size:34px;font-weight:700}
+</style></head><body>
+
+<div class="row">
+  <div class="shot"><p class="caption">1 · Lock Screen — Live Activity next to notifications</p><div class="phone" data-shot="01-lock-screen-live-activity" id="f1"></div></div>
+  <div class="shot"><p class="caption">2 · Dynamic Island — compact, minimal, expanded</p><div style="display:flex;flex-direction:column;gap:44px;padding:8px 20px 20px" data-shot="02-dynamic-island" id="f2"></div></div>
+</div>
+<div class="row">
+  <div class="shot"><p class="caption">3 · Live Activity states</p><div style="width:393px;display:flex;flex-direction:column;gap:14px;padding:16px 10px;background:#0b1a33;border-radius:24px" data-shot="03-live-activity-states" id="f3"></div></div>
+  <div class="shot"><p class="caption">4 · Lock Screen widgets (inline, circular, rectangular)</p><div class="phone" data-shot="04-lock-screen-widgets" id="f4"></div></div>
+  <div class="shot"><p class="caption">5 · Home Screen widgets</p><div class="homecrop" data-shot="05-home-screen-widgets" id="f5"></div></div>
+</div>
+<div class="row" data-shot="06-app-flow" style="padding:28px 28px 20px;background:#d9dbe3;border-radius:24px">
+  <div class="shot"><p class="caption">6a · Sign in</p><div class="phone app" id="f6a"></div></div>
+  <div class="shot"><p class="caption">6b · Choose a league</p><div class="phone app" id="f6b"></div></div>
+  <div class="shot"><p class="caption">6c · Matchup + Live Activity controls</p><div class="phone app" id="f6c"></div></div>
+</div>
+
+<script>
+const I = {
+  football:(s=12,c='currentColor')=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="${c}"><path d="M20.4 3.6c-3.4-1.3-8.9.1-12.6 3.8S2.3 16.9 3.6 20.4c3.4 1.3 8.9-.1 12.6-3.8s5.5-9.6 4.2-13zM9.3 15.7l-1-1 6.4-6.4 1 1-6.4 6.4zm1.5-3.1l-1-1 1-1 1 1-1 1zm1.5-1.5l-1-1 1-1 1 1-1 1zm1.5-1.5l-1-1 1-1 1 1-1 1z"/></svg>`,
+  refresh:(s=12)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg>`,
+  lock:(s=16)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="3" fill="currentColor" stroke="none"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>`,
+  gear:(s=22)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>`,
+  bolt:(s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="var(--green)"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>`,
+  lockphone:(s=16)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 18h4"/></svg>`,
+  chev:()=>`<svg width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l6 6-6 6"/></svg>`,
+  flash:()=>`<svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M8 2h8l-1 7h4L9 22l2-9H6z"/></svg>`,
+  cam:()=>`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>`,
+  trophy:()=>`<svg width="20" height="20" viewBox="0 0 24 24" fill="#8e8e93"><path d="M6 2h12v3h3v3a5 5 0 0 1-5 5h-.5A5.5 5.5 0 0 1 13 16v2h3v3H8v-3h3v-2a5.5 5.5 0 0 1-2.5-3H8a5 5 0 0 1-5-5V5h3V2zm-1 5v1a3 3 0 0 0 3 3V7H5zm14 0h-3v4a3 3 0 0 0 3-3V7z"/></svg>`,
+};
+const status=(dark=true)=>`<div class="status" style="${dark?'':'color:#000'}"><span></span><span class="icons">
+ <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+ <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><path d="M8.5 12 6 9.2a3.6 3.6 0 0 1 5 0L8.5 12zm-4.3-4.6L2.6 5.8a8.6 8.6 0 0 1 11.8 0l-1.6 1.6a6.3 6.3 0 0 0-8.6 0zM.9 4 0 3A12.5 12.5 0 0 1 17 3l-.9 1a11 11 0 0 0-15.2 0z"/></svg>
+ <svg width="27" height="13" viewBox="0 0 27 13" fill="none"><rect x=".5" y=".5" width="23" height="12" rx="3.5" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="20" height="9" rx="2" fill="currentColor"/><path d="M25 4.5v4a2 2 0 0 0 0-4z" fill="currentColor" opacity=".4"/></svg>
+</span></div>`;
+
+const S = {
+  live:{me:{n:'Gridiron Gurus',r:'1-0',p:'87.42',cls:'av-me',ini:'GG'},op:{n:'Couch Potatoes',r:'0-1',p:'74.1',cls:'av-op',ini:'CP'},wk:2,phase:'live',margin:'+13.32',m:'win',league:'Sunday Scaries',upd:'2 min'},
+  trailing:{me:{n:'Gridiron Gurus',r:'1-0',p:'61.3',cls:'av-me',ini:'GG'},op:{n:'Couch Potatoes',r:'0-1',p:'98.76',cls:'av-op',ini:'CP'},wk:2,phase:'live',margin:'−37.46',m:'lose',league:'Sunday Scaries',upd:'30 sec'},
+  final:{me:{n:'Gridiron Gurus',r:'2-0',p:'132.5',cls:'av-me',ini:'GG'},op:{n:'Couch Potatoes',r:'0-2',p:'118.02',cls:'av-op',ini:'CP'},wk:2,phase:'final',margin:'+14.48',m:'win',league:'Sunday Scaries',upd:'1 hr'},
+  pregame:{me:{n:'Gridiron Gurus',r:'2-0',p:'0',cls:'av-me',ini:'GG'},op:{n:'Waiver Wire Warriors',r:'1-1',p:'0',cls:'av-init',ini:'WW'},wk:3,phase:'pregame',margin:'Tied',m:'tie',league:'Sunday Scaries',upd:'5 min'},
+};
+const avatar=(t,size)=>`<div class="avatar ${t.cls}" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.4)}px">${t.ini}</div>`;
+const badge=(phase)=>phase==='live'?`<div class="badge live"><span class="dot"></span>LIVE</div>`:`<div class="badge">${phase==='final'?'FINAL':'UPCOMING'}</div>`;
+const lead=(s)=>({me:s.m!=='lose',op:s.m!=='win'});
+function banner(s,opts={}){
+  const L=lead(s);
+  return `<div class="la ${opts.stale?'stale':''}">
+    <div class="top">
+      <div class="team">${avatar(s.me,34)}<div class="tcol"><div class="name">${s.me.n}</div><div class="record">${s.me.r}</div><div class="score tnum ${L.me?'':'dim'}">${s.me.p}</div></div></div>
+      <div class="center"><div class="wk">WK ${s.wk}</div>${badge(s.phase)}<div class="margin tnum ${s.m}">${s.margin}</div></div>
+      <div class="team trailing"><div class="tcol" style="align-items:flex-end"><div class="name">${s.op.n}</div><div class="record">${s.op.r}</div><div class="score tnum ${L.op?'':'dim'}">${s.op.p}</div></div>${avatar(s.op,34)}</div>
+    </div>
+    <div class="foot"><span>${s.league}</span><span class="sp"></span><span>${opts.stale?'Scores may be out of date':'Updated '+s.upd+' ago'}</span><div class="refresh">${I.refresh(12)}</div></div>
+  </div>`;
+}
+const notif=()=>`<div class="notif"><div class="app">${I.football(20,'#fff')}</div><div><div class="t">Sleeper</div><div class="b">Justin Jefferson just scored a 42-yard TD for you: +10.2</div></div><div class="when">4m ago</div></div>`;
+const phoneChrome=(inner,{time='4:12',date='Sunday, September 20',dark=true,inline=null,clock=true}={})=>`
+  <div class="wall"></div><div class="island"></div>${status(dark)}
+  ${clock?`<div class="lockicon">${I.lock(17)}</div>${inline?`<div class="inline">${inline}</div>`:`<div class="date">${date}</div>`}<div class="time">${time}</div>`:''}
+  ${inner}
+  <div class="quick l">${I.flash()}</div><div class="quick r">${I.cam()}</div><div class="homebar"></div>`;
+
+/* 1: lock screen with LA */
+document.getElementById('f1').innerHTML = phoneChrome(`<div class="stack">${notif()}${banner(S.live)}</div>`);
+
+/* 2: dynamic island */
+const expanded=(s)=>{const L=lead(s);return `<div class="di-exp">
+  <div class="top">
+    <div class="team"><div class="nm">${avatar(s.me,22)}${s.me.n}</div><div class="score tnum ${L.me?'':'dim'}">${s.me.p}</div><div class="record">${s.me.r}</div></div>
+    <div class="center"><div class="wk">WEEK ${s.wk}</div>${badge(s.phase)}</div>
+    <div class="team trailing"><div class="nm">${s.op.n}${avatar(s.op,22)}</div><div class="score tnum ${L.op?'':'dim'}">${s.op.p}</div><div class="record">${s.op.r}</div></div>
+  </div>
+  <div class="bottom"><span>${s.league}</span><span class="sp"></span><span class="margin tnum ${s.m}">${s.margin}</span><div class="refresh">${I.refresh(12)}</div></div>
+</div>`};
+const crop=(inner,label)=>`<div><p class="caption">${label}</p><div class="topcrop"><div class="wall"></div>${status(true)}${inner}<div class="icons-under"><div class="appic"></div><div class="appic"></div><div class="appic"></div><div class="appic"></div></div></div></div>`;
+document.getElementById('f2').innerHTML =
+  crop(`<div class="di-compact"><span class="l tnum">87.42</span><span class="r tnum">74.1</span></div>`,'Compact — your score · their score')+
+  crop(`<div class="island" style="width:110px;left:calc(50% - 8px)"></div><div class="di-min tnum">+13.3</div>`,'Minimal — lead margin (when another Live Activity is active)')+
+  crop(expanded(S.live),'Expanded — long-press the island');
+
+/* 3: states */
+document.getElementById('f3').innerHTML =
+  `<p class="caption" style="color:#9aa4bd;margin:0 0 -4px 4px">Live · leading</p>${banner(S.live)}`+
+  `<p class="caption" style="color:#9aa4bd;margin:0 0 -4px 4px">Live · trailing</p>${banner(S.trailing)}`+
+  `<p class="caption" style="color:#9aa4bd;margin:0 0 -4px 4px">Final (lingers up to 4 h, then goes away)</p>${banner(S.final)}`+
+  `<p class="caption" style="color:#9aa4bd;margin:0 0 -4px 4px">Stale — no update for 30 min</p>${banner(S.live,{stale:true})}`;
+
+/* 4: accessory widgets */
+document.getElementById('f4').innerHTML = phoneChrome(`
+  <div class="widgets">
+    <div class="acc circ"><div class="a tnum">87.4</div><div class="line"></div><div class="b tnum">74.1</div></div>
+    <div class="acc rect"><div class="h">${I.football(11,'#fff')}<span><b>Week 2</b> · Live</span></div><div class="ln bold"><span>Gridiron Gurus</span><span class="tnum">87.42</span></div><div class="ln"><span>Couch Potatoes</span><span class="tnum">74.1</span></div></div>
+  </div>
+  <div class="stack">${notif()}</div>`,
+  {inline:`${I.football(15,'#fff')}<span class="tnum">87.42–74.1 · +13.32</span>`});
+
+/* 5: home screen widgets */
+document.getElementById('f5').innerHTML = `<div class="wall"></div><div class="island"></div>${status(true)}
+  <div class="hw">
+    <div class="wcard medium">
+      <div class="league"><span>Sunday Scaries</span>${badge('live')}</div>
+      <div class="cols">
+        <div class="col">${avatar(S.live.me,30)}<div class="nm">Gridiron Gurus</div><div class="score tnum">87.42</div><div class="rc">1-0</div></div>
+        <div class="mid"><div class="wk">WK 2</div><div class="margin tnum win">+13.32</div></div>
+        <div class="col tr">${avatar(S.live.op,30)}<div class="nm">Couch Potatoes</div><div class="score tnum dim">74.1</div><div class="rc">0-1</div></div>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="wcard small">
+        <div class="league"><span>Sunday Scaries</span>${badge('live')}</div>
+        <div class="srow">${avatar(S.live.me,20)}<span>Gridiron Gurus</span><span class="s tnum">87.42</span></div>
+        <div class="srow">${avatar(S.live.op,20)}<span>Couch Potatoes</span><span class="s tnum dim">74.1</span></div>
+        <div class="fut"><span>Week 2</span><span class="win" style="font-weight:700">+13.32</span></div>
+      </div>
+      <div class="iconrow" style="flex-wrap:wrap;width:158px;gap:23px 38px"><div class="ic"></div><div class="ic"></div><div class="ic"></div><div class="ic"></div></div>
+    </div>
+  </div>`;
+
+/* 6: app flow */
+const appChrome=(inner)=>`<div style="position:absolute;inset:0;background:#f2f2f7"></div><div class="island"></div>${status(false)}${inner}<div class="homebar" style="background:#000"></div>`;
+document.getElementById('f6a').innerHTML = appChrome(`<div class="signin">
+  ${I.football(56,'var(--green)')}
+  <div><h1>Sleeper Widget</h1><p>Your fantasy matchup on the Lock Screen and in the Dynamic Island while games are on.</p></div>
+  <div class="field filled">neilsachdeva</div>
+  <div class="hint">No password needed. Sleeper's public API only reads league data.</div>
+  <div class="cta">Continue</div>
+</div>`);
+const lrow=(name,sub,grad)=>`<div class="lrow"><div class="lav" style="background:${grad}"></div><div><div>${name}</div><div class="sub">${sub}</div></div><span class="chev">${I.chev()}</span></div>`;
+document.getElementById('f6b').innerHTML = appChrome(`
+  <div class="nav"><span class="lead" style="color:var(--red);right:18px;left:auto">Sign out</span></div>
+  <div class="bigtitle">Neil</div>
+  <div class="list"><p class="sec">Choose a league</p><div class="grp">
+    ${lrow('Sunday Scaries','2026 · 12 teams','linear-gradient(145deg,#6366f1,#22d3ee)')}
+    ${lrow('Office Dynasty','2026 · 10 teams','linear-gradient(145deg,#f59e0b,#ef4444)')}
+    ${lrow('The Family League','2026 · 8 teams','linear-gradient(145deg,#10b981,#065f46)')}
+  </div><p class="ft">You can switch leagues later from Settings.</p></div>`);
+document.getElementById('f6c').innerHTML = appChrome(`
+  <div class="nav">Sunday Scaries<span class="gear">${I.gear(22)}</span></div>
+  <div class="content">
+    <div class="card">
+      <div class="hd"><span>Week 2</span><span class="live"><span class="dot"></span>Live</span></div>
+      <div class="cols">
+        <div class="col">${avatar(S.live.me,56)}<div class="nm">Gridiron Gurus</div><div class="own">@neilsachdeva</div><div class="big tnum">87.42</div><div class="rc">1-0</div></div>
+        <div class="vs"><div class="v">VS</div><div class="m tnum">+13.32</div></div>
+        <div class="col">${avatar(S.live.op,56)}<div class="nm">Couch Potatoes</div><div class="own">@sam_k</div><div class="big dim tnum">74.1</div><div class="rc">0-1</div></div>
+      </div>
+    </div>
+    <div class="card lacard">
+      <div class="hd2">${I.bolt(18)}Live Activity<span class="pill">On</span></div>
+      <div class="foot13">Scores update on the Lock Screen and in the Dynamic Island. Pull to refresh for the latest.</div>
+      <div class="btn bord">Stop</div>
+    </div>
+    <div class="updated">Updated 2 min ago</div>
+  </div>`);
+</script>
+</body></html>
