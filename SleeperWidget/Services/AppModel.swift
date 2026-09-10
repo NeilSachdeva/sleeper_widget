@@ -200,7 +200,7 @@ final class AppModel {
     static func message(for error: ActivityAuthorizationError) -> String {
         switch error {
         case .denied:
-            return "Live Activities are turned off for this app. Enable them in Settings › Sleeper Widget."
+            return "Live Activities are turned off for this app. Enable them in Settings › \(AppConfig.displayName)."
         case .targetMaximumExceeded, .globalMaximumExceeded:
             return "Too many Live Activities are running. Dismiss one from the Lock Screen and try again."
         case .visibility:
@@ -229,7 +229,11 @@ final class AppModel {
         let previous = SharedStore.relayURL
         if trimmed.isEmpty {
             SharedStore.relayURL = nil
-            if let previous { await liveActivity.unregisterFromRelay(at: previous) }
+            if let previous, previous != AppConfig.defaultRelayURL {
+                await liveActivity.unregisterFromRelay(at: previous)
+            }
+            // Fall back to the built-in relay, if the build ships one.
+            await liveActivity.syncRelay()
             return
         }
         guard let url = URL(string: trimmed), let scheme = url.scheme?.lowercased(), scheme == "https" || scheme == "http" else {

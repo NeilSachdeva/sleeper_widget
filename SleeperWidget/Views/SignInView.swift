@@ -12,7 +12,7 @@ struct SignInView: View {
                 .font(.system(size: 56))
                 .foregroundStyle(.green)
             VStack(spacing: 8) {
-                Text("Sleeper Widget")
+                Text(AppConfig.displayName)
                     .font(.largeTitle.bold())
                 Text("Your fantasy matchup on the Lock Screen and in the Dynamic Island while games are on.")
                     .multilineTextAlignment(.center)

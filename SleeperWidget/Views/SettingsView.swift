@@ -4,8 +4,8 @@ struct SettingsView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @State private var autoStart = SharedStore.autoStartLiveActivity
-    @State private var relayURLText = SharedStore.relayURL?.absoluteString ?? ""
-    @State private var relayTokenText = SharedStore.relayAuthToken ?? ""
+    @State private var relayURLText = SharedStore.hasCustomRelayURL ? (SharedStore.relayURL?.absoluteString ?? "") : ""
+    @State private var relayTokenText = SharedStore.hasCustomRelayURL ? (SharedStore.relayAuthToken ?? "") : ""
 
     var body: some View {
         NavigationStack {
@@ -35,7 +35,7 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    TextField("https://your-relay.example.com", text: $relayURLText)
+                    TextField(AppConfig.defaultRelayURL?.absoluteString ?? "https://your-relay.example.com", text: $relayURLText)
                         .keyboardType(.URL)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
@@ -54,7 +54,9 @@ struct SettingsView: View {
                 } header: {
                     Text("Push relay (optional)")
                 } footer: {
-                    Text("Run the server in the repo's server/ folder to start and update the Live Activity from the cloud, even when the app is closed. Leave blank to rely on foreground and background refresh. The token matches the relay's RELAY_AUTH_TOKEN, if you set one.")
+                    Text(AppConfig.defaultRelayURL == nil
+                         ? "Run the server in the repo's server/ folder to start and update the Live Activity from the cloud, even when the app is closed. Leave blank to rely on foreground and background refresh. The token matches the relay's RELAY_AUTH_TOKEN, if you set one."
+                         : "This build already uses a relay so the Live Activity starts and updates from the cloud. Enter your own relay here to override it.")
                 }
 
                 Section {

@@ -115,19 +115,28 @@ enum SharedStore {
     }
 
     /// Base URL of the optional push relay in `server/` (e.g. https://relay.example.com).
+    /// Falls back to `AppConfig.defaultRelayURL` when the user hasn't entered one.
     static var relayURL: URL? {
         get {
-            guard let text = defaults.string(forKey: Key.relayURL), !text.isEmpty else { return nil }
+            guard let text = defaults.string(forKey: Key.relayURL), !text.isEmpty else {
+                return AppConfig.defaultRelayURL
+            }
             return URL(string: text)
         }
         set { defaults.set(newValue?.absoluteString, forKey: Key.relayURL) }
     }
 
+    /// Whether the relay URL came from the user rather than the built-in default.
+    static var hasCustomRelayURL: Bool {
+        !(defaults.string(forKey: Key.relayURL) ?? "").isEmpty
+    }
+
     /// Bearer token for a relay started with RELAY_AUTH_TOKEN; empty means none.
+    /// Uses the built-in token while the built-in relay URL is in effect.
     static var relayAuthToken: String? {
         get {
-            guard let text = defaults.string(forKey: Key.relayAuthToken), !text.isEmpty else { return nil }
-            return text
+            if let text = defaults.string(forKey: Key.relayAuthToken), !text.isEmpty { return text }
+            return hasCustomRelayURL ? nil : AppConfig.defaultRelayAuthToken
         }
         set { defaults.set(newValue, forKey: Key.relayAuthToken) }
     }

@@ -193,7 +193,7 @@ private struct LiveActivityCard: View {
                 .foregroundStyle(.secondary)
 
             if !model.liveActivity.areActivitiesEnabled {
-                Text("Live Activities are off for this app. Turn them on in Settings › Sleeper Widget › Live Activities.")
+                Text("Live Activities are off for this app. Turn them on in Settings › \(AppConfig.displayName) › Live Activities.")
                     .font(.footnote)
                     .foregroundStyle(.orange)
             }

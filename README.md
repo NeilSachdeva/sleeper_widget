@@ -71,6 +71,9 @@ do not fully work in the simulator; push-to-start needs a real device), and
    `PRODUCT_BUNDLE_IDENTIFIER`s, `BGTaskSchedulerPermittedIdentifiers`, and the
    App Group (`group.com.sleeperwidget.shared`). Update the same App Group and task id in
    `Shared/AppConfig.swift`. The extension's bundle id must be prefixed by the app's.
+   The app ships as "Matchup Live" (`AppConfig.displayName` and `CFBundleDisplayName`);
+   rename it there if you like. If you deploy the relay, set `AppConfig.defaultRelayURL`
+   so testers get cloud updates without touching Settings.
 2. Generate and open the project:
 
    ```sh

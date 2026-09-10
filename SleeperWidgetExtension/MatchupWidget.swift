@@ -315,7 +315,7 @@ private struct EmptyMatchupView: View {
     var body: some View {
         switch family {
         case .accessoryInline:
-            Text("\(Image(systemName: "football.fill")) Sleeper Widget")
+            Text("\(Image(systemName: "football.fill")) \(AppConfig.displayName)")
         case .accessoryCircular:
             ZStack {
                 AccessoryWidgetBackground()

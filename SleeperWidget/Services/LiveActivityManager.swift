@@ -9,7 +9,7 @@ enum LiveActivityError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .disabled:
-            return "Live Activities are turned off for this app. Enable them in Settings › Sleeper Widget."
+            return "Live Activities are turned off for this app. Enable them in Settings › \(AppConfig.displayName)."
         case .noMatchup:
             return "Load a matchup before starting a Live Activity."
         }

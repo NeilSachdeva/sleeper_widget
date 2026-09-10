@@ -37,7 +37,7 @@ targets:
     info:
       path: SleeperWidget/Info.plist
       properties:
-        CFBundleDisplayName: Sleeper Widget
+        CFBundleDisplayName: Matchup Live
         CFBundleName: SleeperWidget
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
@@ -84,7 +84,7 @@ targets:
     info:
       path: SleeperWidgetExtension/Info.plist
       properties:
-        CFBundleDisplayName: Sleeper Widget
+        CFBundleDisplayName: Matchup Live
         CFBundleName: SleeperWidgetExtension
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
