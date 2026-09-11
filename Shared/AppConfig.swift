@@ -45,6 +45,14 @@ enum AppConfig {
     /// Deep link that opens the matchup screen from the Live Activity or a widget.
     static var matchupDeepLink: URL { URL(string: "\(urlScheme)://matchup")! }
 
+    /// Sleeper's own matchup page for a league. As a universal link it opens the
+    /// Sleeper app when installed; the app forwards Live Activity taps here when
+    /// `SharedStore.tapOpensSleeper` is on.
+    static func sleeperMatchupURL(leagueId: String?) -> URL? {
+        guard let leagueId, !leagueId.isEmpty else { return nil }
+        return URL(string: "https://sleeper.com/leagues/\(leagueId)/matchup")
+    }
+
     /// How long a Live Activity update is considered fresh before the system
     /// shows it as stale (greyed out) when no newer update arrived.
     static let liveActivityStaleInterval: TimeInterval = 30 * 60

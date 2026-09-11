@@ -132,6 +132,10 @@ xcodebuild test -scheme SleeperWidget -destination 'platform=iOS Simulator,name=
   `MatchupWidget.swift` render every presentation in Xcode's canvas with sample data.
 - **Refresh button:** the arrow on the Lock Screen banner and in the expanded Dynamic
   Island runs `RefreshMatchupIntent` in the app's process without opening the app.
+- **Tapping the activity:** iOS only lets a Live Activity open its own app, so this app
+  opens for a moment and hands off to Sleeper's matchup page for your league (a universal
+  link, so the Sleeper app opens when installed). Turn "Tap opens the Sleeper app" off in
+  Settings to land on this app's matchup screen instead.
 - **Background refresh:** the Simulator never runs `BGAppRefreshTask`. On a device, pause
   in the debugger after the app goes to the background and run:
 

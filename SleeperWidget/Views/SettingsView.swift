@@ -4,6 +4,7 @@ struct SettingsView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @State private var autoStart = SharedStore.autoStartLiveActivity
+    @State private var tapOpensSleeper = SharedStore.tapOpensSleeper
     @State private var relayURLText = SharedStore.hasCustomRelayURL ? (SharedStore.relayURL?.absoluteString ?? "") : ""
     @State private var relayTokenText = SharedStore.hasCustomRelayURL ? (SharedStore.relayAuthToken ?? "") : ""
 
@@ -26,12 +27,16 @@ struct SettingsView: View {
                         .onChange(of: autoStart) { _, value in
                             SharedStore.autoStartLiveActivity = value
                         }
+                    Toggle("Tap opens the Sleeper app", isOn: $tapOpensSleeper)
+                        .onChange(of: tapOpensSleeper) { _, value in
+                            SharedStore.tapOpensSleeper = value
+                        }
                     LabeledContent("Live Activities", value: model.liveActivity.areActivitiesEnabled ? "Enabled" : "Off in Settings")
                     LabeledContent("Frequent updates", value: model.liveActivity.frequentPushesEnabled ? "Allowed" : "Off in Settings")
                 } header: {
                     Text("Live Activity")
                 } footer: {
-                    Text("When on, opening the app during NFL game windows pins your matchup to the Lock Screen. iOS keeps a Live Activity for up to 8 hours; scores refresh when you open the app, in the background when iOS allows, and continuously if a push relay is configured.")
+                    Text("When on, opening the app during NFL game windows pins your matchup to the Lock Screen. iOS keeps a Live Activity for up to 8 hours; scores refresh when you open the app, in the background when iOS allows, and continuously if a push relay is configured. Tapping the activity always passes through this app first (an iOS rule); with the tap option on it hands off to Sleeper's matchup page right away, or stays here if Sleeper isn't installed.")
                 }
 
                 Section {

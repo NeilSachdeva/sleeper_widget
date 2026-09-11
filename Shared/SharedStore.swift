@@ -18,6 +18,7 @@ enum SharedStore {
         static let relayRegisteredAt = "relay.registeredAt"
         static let lastRefresh = "refresh.last"
         static let autoStartSuppressedUntil = "liveActivity.suppressedUntil"
+        static let tapOpensSleeper = "tap.opensSleeper"
     }
 
     /// Falls back to standard defaults if the App Group is misconfigured, so the app
@@ -117,6 +118,13 @@ enum SharedStore {
     static var liveActivityStartedManually: Bool {
         get { defaults.bool(forKey: Key.liveActivityStartedManually) }
         set { defaults.set(newValue, forKey: Key.liveActivityStartedManually) }
+    }
+
+    /// Tapping the Live Activity or a widget hands off to the Sleeper app (via its
+    /// league page) instead of staying in this app. Default on.
+    static var tapOpensSleeper: Bool {
+        get { (defaults.object(forKey: Key.tapOpensSleeper) as? Bool) ?? true }
+        set { defaults.set(newValue, forKey: Key.tapOpensSleeper) }
     }
 
     /// After the user taps Stop, auto-start stays off until this time (the end of the
